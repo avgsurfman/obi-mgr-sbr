@@ -35,34 +35,32 @@ module obi_master#(
    output logic [DATA_WIDTH/8-1:0] obi_be_o,
    // Master -> OBI
    output logic [DATA_WIDTH-1:0] obi_wdata_o,
-   
-   /// stubs - optional signals
-    
-   //output logic auser_o,
-   //output logic wuser_o,
-   //output logic [ID_WIDTH-1:0] aid_o,
-   //output logic [5:0] atop_o,
-   //output logic [1:0] memtype_o,
-   //output logic [2:0] prot_o,
+   /* stubs - optional signals
+   output logic [AUSER_WIDTH-1:0] obi_auser_o,
+   output logic [WUSER_WIDTH-1:0] obi_wuser_o,
+   output logic [ID_WIDTH-1:0] obi_aid_o,
+   output logic [5:0] obi_atop_o,
+   output logic [1:0] obi_memtype_o,
+   output logic [2:0] obi_prot_o,
    // Odd Parity signals
-   //output logic obi_reqpar_o
-   //input logic obi_gntpar_i
-   // output logic achk[]
+   output logic obi_reqpar_o,
+   input logic obi_gntpar_i,
+   output logic [ACHK_WIDTH-1:0] achk,
+   */
    
    //// R Channel signals 
    input logic obi_rvalid_i,
    output logic obi_rready_o,  
    input logic [DATA_WIDTH-1:0] obi_rdata_i,
    input logic obi_err_i
-   
-   /// stubs - optional signals
-   // Odd parity signals 
-   //output logic [RUSER_WIDTH-1:0] ruser
-   //output logic [ID_WIDTH-1:0] rid
-   //output logic exokay
-   //output logic rvalidpar
-   //output logic rreadypar 
-   //output logic rchk[]
+   /* stubs - optional signals
+   input logic [RUSER_WIDTH-1:0] obi_ruser_i,
+   input logic [ID_WIDTH-1:0] obi_rid_i,
+   input logic obi_exokay_i,
+   // Odd Parity signals
+   output logic obi_rvalidpar_o,
+   output logic obi_rreadypar_o,
+   input logic [RCHK_WIDTH-1:0] obi_rchk_i */
 
 );
 
@@ -70,8 +68,15 @@ module obi_master#(
 
 logic [DATA_WIDTH-1:0] rdata_d, rdata_q;
 
-// Tied signals 
+// Tied off signals (R-26)
 
+assign obi_be_o = 4'b1111; 
+//assign obi_auser_o = 'b0;
+//assign obi_aid_o = 'b0;
+//assign obi_wuser_o = 'b0;
+//assign obi_prot_o = 3'b111;
+//assign obi_memtype_o = 2'b0;
+//assign obi_atop_o = 'b0;
 
 // State definitions
 
@@ -90,7 +95,7 @@ statetype state, nextstate;
 always_ff @(posedge clk_i or negedge reset_ni) begin
     if (!reset_ni) begin
         state <= RESET;
-        rdata_d <= '0; 
+        rdata_q <= '0; 
     end
     else begin
         rdata_q <= rdata_d; 
@@ -134,7 +139,6 @@ end
 
 assign obi_req_o = (state == READ_REQ) || (state == WRITE_REQ);
 assign obi_we_o = (state == WRITE_REQ);
-assign obi_be_o = '1; 
 assign obi_rready_o = (state == IDLE) || ( state == READ_GNT) || ( state == WRITE_GNT);
 assign obi_wdata_o = wdata_i;
 assign obi_addr_o = addr_i;
