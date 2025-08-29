@@ -76,7 +76,7 @@ module obi_master#(
 
 /// Error counter;
 
-logic [7:0] err_cnt;
+logic [7:0] err_cnt_q;
 
 /// Necessary regs & wires
 
@@ -112,13 +112,15 @@ always_ff @(posedge clk_i or negedge reset_ni) begin
     if (!reset_ni) begin
         state <= RESET;
         rdata_q <= '0;
+        err_cnt_q <= 8'h00;
     end
     else begin
         state <= nextstate;
         // Sampled and sent on clk'
         addr_q <= addr_i;
         wdata_q <= wdata_i; 
-        rdata_q <= rdata_d; 
+        rdata_q <= rdata_d;
+    if(obi_err_i) err_cnt_q <= err_cnt_q + 1; 
     end
 end
 
