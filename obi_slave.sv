@@ -10,7 +10,7 @@
 //    ⣿⡏⣾⡏⢪⣾⡇⡿⠿⢟⣫⠵⣛⡅⠀
 //    ⣿⣷⣙⠷⢿⣟⣓⣯⢨⣷⣾⣿⣿⡇⠀
 //    ⣿⣿⣿⣿⣿⣿⣿⣟⣼⣿⣿⣿⣿⡇⠀
-module obi_master#(
+module obi_slave#(
    /// Adress Width Parameter. Can be either 32-bit or 64-bit.
    parameter int unsigned ADDR_WIDTH = 32, 
    /// Data Width Parameter. Can be either 32-bit or 64-bit.
@@ -28,7 +28,7 @@ module obi_master#(
    input logic reset_ni,
 
    //// Controller signals
-   input logic busy_i;
+   //input logic busy_i;
 
    //// Channel signals
    /// A channel
@@ -42,16 +42,16 @@ module obi_master#(
    input logic [DATA_WIDTH-1:0] obi_wdata_i,
    
    /* stubs - optional signals
-   output logic [AUSER_WIDTH-1:0] obi_auser_o,
-   output logic [WUSER_WIDTH-1:0] obi_wuser_o,
-   output logic [ID_WIDTH-1:0] obi_aid_o,
-   output logic [5:0] obi_atop_o,
-   output logic [1:0] obi_memtype_o,
-   output logic [2:0] obi_prot_o,
+   Input logic [AUSER_WIDTH-1:0] obi_auser_i,
+   Input logic [WUSER_WIDTH-1:0] obi_wuser_i,
+   Input logic [ID_WIDTH-1:0] obi_aid_i,
+   Input logic [5:0] obi_atop_i,
+   Input logic [1:0] obi_memtype_i,
+   Input logic [2:0] obi_prot_i,
    // Odd Parity signals
-   output logic obi_reqpar_o,
-   input logic obi_gntpar_i,
-   output logic [ACHK_WIDTH-1:0] achk,
+   input logic obi_reqpar_i,
+   output logic obi_gntpar_o,
+   input logic [ACHK_WIDTH-1:0] achk_i,
    */
    
    /// R Channel signals 
@@ -60,20 +60,20 @@ module obi_master#(
    output logic [DATA_WIDTH-1:0] obi_rdata_o,
    output logic obi_err_o
    /* stubs - optional signals
-   input logic [RUSER_WIDTH-1:0] obi_ruser_i,
-   input logic [ID_WIDTH-1:0] obi_rid_i,
-   input logic obi_exokay_i,
+   output logic [RUSER_WIDTH-1:0] obi_ruser_i,
+   output logic [ID_WIDTH-1:0] obi_rid_i,
+   output logic obi_exokay_i,
    // Odd Parity signals
-   output logic obi_rvalidpar_o,
-   output logic obi_rreadypar_o,
-   input logic [RCHK_WIDTH-1:0] obi_rchk_i */
+   input logic obi_rvalidpar_i,
+   input logic obi_rreadypar_i,
+   output logic [RCHK_WIDTH-1:0] obi_rchk_i */
 
 );
 
 /// Necessary regs and wires
 
-logic [DATA_WIDTH-1:0] addr_q, addr_q;
-logic [DATA_WIDTH-1:0] wdata_q, addr_q;
+logic [DATA_WIDTH-1:0] addr_q;
+logic [DATA_WIDTH-1:0] wdata_q; 
 
 
 
@@ -90,7 +90,7 @@ typedef enum logic [1:0] {
     RESET     = 2'b11,
     IDLE      = 2'b00,
     READ  = 2'b10,
-    WRITE  = 2'b01,
+    WRITE  = 2'b01
 } statetype;
 
 statetype state, nextstate;
@@ -101,13 +101,15 @@ always_ff@(posedge clk_i or negedge reset_ni) begin
     end
     else begin
         state <= nextstate;
+        addr_q <= obi_addr_i;
+        wdata_q <= obi_wdata_i;
     end
 end
 
-always_comb
+always_comb begin
+    obi_rdata_o = 'b0;
     case(state)
         RESET:
-            obi_rvalid_o = 0;
             nextstate = state;
         IDLE:
            if(!obi_we_i && obi_req_i) begin
@@ -120,12 +122,19 @@ always_comb
            end
            else nextstate = IDLE;
        READ:
-           if(obi_rready_i) nextstate = IDLE;
+           obi_rdata_o = mem[addr_q];
+           if (obi_rready_i) nextstate = IDLE;
            else nextstate = READ;
        WRITE:
+           // This is supposed to be undef but we can echo back the written value
+           mem[addr_q] = wdata_q; 
+           obi_rdata_o = mem[addr_q];
            if(obi_rready_i) nextstate = IDLE;
            else nextstate = WRITE;
     endcase
+end
 
+    assign obi_gnt_o = (state == IDLE);
+    assign obi_rvalid_o = (state != IDLE); 
 
 endmodule;

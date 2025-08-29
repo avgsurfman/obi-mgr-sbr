@@ -158,7 +158,7 @@ end
 /// TODO: Integrate optional A-Atomic bus if selected in opt config
 /// ETHZ common cells and OBI Main Repo
 
-assign obi_req_o = (state == READ_REQ) || (state == WRITE_REQ);
+assign obi_req_o = (state == READ_REQ) | (state == WRITE_REQ);
 assign obi_we_o = (state == WRITE_REQ); 
 assign obi_rready_o = (state != RESET);
 //wdata, rdata and addr signals are synced to clock'.
