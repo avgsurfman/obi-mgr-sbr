@@ -81,7 +81,7 @@ obi_master #(
 
 // Initialize signals
 initial begin
-    $dumpfile("obi_master.out");
+    $dumpfile("obi_master.vcd");
     $dumpvars(0, dut);
     $display("Starting the testbench...");
     $display("Test 0: Power-on (Transition to IDLE state)");
@@ -107,9 +107,21 @@ initial begin
     req_i = 1; 
     addr_i = 'hDEADBEEF;
     // Wait for a gnt request.
-    #5
+    #5;
     obi_gnt_i = 1;
-    //assert(dut.state == 
+    #5;
+    //check on posedge
+    //assert(dut.state == 3'b011) else begin
+    //    $error("Failed to Acknowledge GNT! Actual value: %h", dut.state);
+    //    $stop;
+    //end
+    #10;
+    obi_gnt_i = 0;
+    obi_rvalid_i = 1;
+    obi_rdata_i = 'h1A73BEEF;
+    #10;
+    assert(rsp_o == 'h1A73BEEF) else $error("Failed to receive the read signal.");
+    $display("All tests passed successfully");
     $stop; 
 
 end

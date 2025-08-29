@@ -157,8 +157,8 @@ end
 /// ETHZ common cells and OBI Main Repo
 
 assign obi_req_o = (state == READ_REQ) || (state == WRITE_REQ);
-assign obi_we_o = (state == WRITE_REQ);
-assign obi_rready_o = (state == IDLE) || ( state == READ_GNT) || ( state == WRITE_GNT);
+assign obi_we_o = (state == WRITE_REQ); 
+assign obi_rready_o = (state != RESET);
 //wdata, rdata and addr signals are synced to clock'.
 assign obi_wdata_o = wdata_q;
 assign obi_addr_o = addr_q;
