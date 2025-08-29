@@ -1,7 +1,15 @@
 // OBI Master v1 (v2 in progress)
+// Performs a single read/write to a subordinate/slave.
 // CC Franciszek Moszczuk and IHP Microelectronics GmbH. 
 // Licensed under Apache 2.0 License.
-
+//    ⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣶⣶⣶⣿⡆
+//    ⣶⣶⣶⣶⣶⣶⣶⣶⣶⡎⠉⠉⠉⢹⣇
+//    ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣀⣀⣤⡜⠋
+//    ⣿⣿⡟⠻⡟⣼⣿⣿⣿⣿⣿⣿⣿⡇⠀
+//    ⣿⣿⢳⣶⢱⢟⡛⣟⣩⣭⣽⡻⣿⡇⠀
+//    ⣿⡏⣾⡏⢪⣾⡇⡿⠿⢟⣫⠵⣛⡅⠀
+//    ⣿⣷⣙⠷⢿⣟⣓⣯⢨⣷⣾⣿⣿⡇⠀
+//    ⣿⣿⣿⣿⣿⣿⣿⣟⣼⣿⣿⣿⣿⡇⠀
 module obi_master#(
    /// Adress Width Parameter. Can be either 32-bit or 64-bit.
    parameter int unsigned ADDR_WIDTH = 32, 
@@ -27,7 +35,9 @@ module obi_master#(
    // Data -> Master
    input  logic [DATA_WIDTH-1:0] wdata_i,
 
-   //// A Channel signals
+   //// Channel signals
+   /// A channel
+   // TODO: Change this to use OBI interfaces
    output logic obi_req_o,
    input  logic obi_gnt_i,
    output logic [ADDR_WIDTH-1:0] obi_addr_o,
@@ -48,7 +58,7 @@ module obi_master#(
    output logic [ACHK_WIDTH-1:0] achk,
    */
    
-   //// R Channel signals 
+   /// R Channel signals 
    input logic obi_rvalid_i,
    output logic obi_rready_o,  
    input logic [DATA_WIDTH-1:0] obi_rdata_i,
@@ -64,11 +74,17 @@ module obi_master#(
 
 );
 
-// Necessary regs & wires
+/// Error counter;
 
-logic [DATA_WIDTH-1:0] rdata_d, rdata_q;
+logic [7:0] err_cnt;
 
-// Tied off signals (R-26)
+/// Necessary regs & wires
+
+logic [ADDR_WIDTH-1:0] addr_q;
+logic [DATA_WIDTH-1:0] rdata_q, rdata_d;
+logic [DATA_WIDTH-1:0] wdata_q;
+
+/// Tied off signals (R-26)
 
 assign obi_be_o = 4'b1111; 
 //assign obi_auser_o = 'b0;
@@ -78,7 +94,7 @@ assign obi_be_o = 4'b1111;
 //assign obi_memtype_o = 2'b0;
 //assign obi_atop_o = 'b0;
 
-// State definitions
+/// State definitions
 
 typedef enum logic [2:0] {
     RESET     = 3'b001,
@@ -91,15 +107,18 @@ typedef enum logic [2:0] {
 
 statetype state, nextstate;
 
-// Reset and next-state logic
+/// Reset and next-state logic
 always_ff @(posedge clk_i or negedge reset_ni) begin
     if (!reset_ni) begin
         state <= RESET;
-        rdata_q <= '0; 
+        rdata_q <= '0;
     end
     else begin
-        rdata_q <= rdata_d; 
         state <= nextstate;
+        // Sampled and sent on clk'
+        addr_q <= addr_i;
+        wdata_q <= wdata_i; 
+        rdata_q <= rdata_d; 
     end
 end
 
@@ -134,15 +153,15 @@ end
 /// Output logic
 
 /// TODO: Add a FIFO Queue for outstanding transactions
-/// Unfortunately I don't know how Atomic Ops work but 
-/// hopefully this could be added later on.
+/// TODO: Integrate optional A-Atomic bus if selected in opt config
+/// ETHZ common cells and OBI Main Repo
 
 assign obi_req_o = (state == READ_REQ) || (state == WRITE_REQ);
 assign obi_we_o = (state == WRITE_REQ);
 assign obi_rready_o = (state == IDLE) || ( state == READ_GNT) || ( state == WRITE_GNT);
-assign obi_wdata_o = wdata_i;
-assign obi_addr_o = addr_i;
-
+//wdata, rdata and addr signals are synced to clock'.
+assign obi_wdata_o = wdata_q;
+assign obi_addr_o = addr_q;
 assign rsp_o = rdata_q;
 
 endmodule

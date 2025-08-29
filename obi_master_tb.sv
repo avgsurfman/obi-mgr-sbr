@@ -3,12 +3,22 @@
 
 module obi_master_tb();
 
-
 localparam ADDR_WIDTH = 32;
 localparam DATA_WIDTH = 32;
 
 logic clk_i;
 logic reset_ni;
+
+/// Test vectors
+
+//logic [DATA_WIDTH*]
+
+//Inputs: addr_i _req_gnt_rvalid
+
+
+//initial begin
+//    $readmemh()
+//
 
 //// Controller signals
 logic req_i; 
@@ -17,12 +27,6 @@ logic [ADDR_WIDTH-1:0] addr_i;
 logic [DATA_WIDTH-1:0] rsp_o;
 // Data -> Master
 logic [DATA_WIDTH-1:0] wdata_i;
-
-logic req, gnt;
-logic [ADDR_WIDTH-1:0] addr;
-logic we;
-logic [DATA_WIDTH/8-1:0] be;
-logic [DATA_WIDTH-1:0] wdata;
 
 //// A Channel signals
 logic obi_req_o;
@@ -72,10 +76,43 @@ obi_master #(
    .obi_rvalid_i (obi_rvalid_i),
    .obi_rready_o (obi_rready_o),
    .obi_rdata_i (obi_rdata_i),
-   .obi_err_i (obi_err_i)
+   .obi_err_i (1'b0)
 );
 
 // Initialize signals
+initial begin
+    $dumpfile("obi_master.out");
+    $dumpvars(0, dut);
+    $display("Starting the testbench...");
+    $display("Test 0: Power-on (Transition to IDLE state)");
+    reset_ni = 1;
+    req_i = 0; 
+    we_i = 0;
+    addr_i = 'b0; 
+    wdata_i = 'b0;
+    obi_gnt_i = 0;
+    obi_rvalid_i = 0;
+    #5;
+    reset_ni = 0; 
+    #5;
+    reset_ni = 1; 
+    #10;
+    //assert that state is 000
+    assert(dut.state == 3'b000) else begin
+        $error("Failed to reset! Actual value: %h", dut.state);
+        $stop;
+    end
+    $display("Test 1: Get arb data.");
+    //set req high 
+    req_i = 1; 
+    addr_i = 'hDEADBEEF;
+    // Wait for a gnt request.
+    #5
+    obi_gnt_i = 1;
+    //assert(dut.state == 
+    $stop; 
+
+end
 
 
 endmodule
