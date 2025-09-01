@@ -70,19 +70,21 @@ module obi_slave#(
 
 );
 
+localparam MEM_WIDTH=4;
+
 /// Necessary regs and wires
 
 logic [DATA_WIDTH-1:0] addr_q;
 logic mem_we;
-
+logic out_of_range;
 
 /// Memory
 
-logic [DATA_WIDTH-1:0] mem [2**ADDR_WIDTH-1:0];
+logic [DATA_WIDTH-1:0] mem [2**MEM_WIDTH-1:0];
+
 
 /// Tied off signals (R-26)
 
-assign obi_err_o = 1'b0;
 
 /// State definitions
 
@@ -108,6 +110,7 @@ end
 
 always_comb begin
     obi_rdata_o = 'b0;
+    obi_err_o = 1'b0;
     mem_we = 'b0;
     case(state)
         RESET:
@@ -124,7 +127,12 @@ always_comb begin
            end
            else nextstate = IDLE;
        READ: begin
-           obi_rdata_o = mem[addr_q];
+           // Adress out of range
+           if (out_of_range) begin
+               obi_err_o = 1'b1;
+               obi_rdata_o = 'hBADCAB1E;                
+           end
+           else obi_rdata_o = mem[addr_q];
            if (obi_rready_i) nextstate = IDLE;
            else nextstate = READ;
            end
@@ -138,8 +146,7 @@ always_comb begin
        end
     endcase
 end
-
     assign obi_gnt_o = (state == IDLE);
     assign obi_rvalid_o = (state != IDLE); 
-
+    assign out_of_range = |addr_q[ADDR_WIDTH-1:MEM_WIDTH];
 endmodule;
