@@ -111,7 +111,7 @@ always_comb begin
     mem_we = 'b0;
     case(state)
         RESET:
-           nextstate = state;
+           nextstate = IDLE;
         IDLE:
            if(!obi_we_i && obi_req_i) begin
                 nextstate = READ;
