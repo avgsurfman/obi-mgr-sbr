@@ -73,8 +73,7 @@ module obi_slave#(
 /// Necessary regs and wires
 
 logic [DATA_WIDTH-1:0] addr_q;
-logic [DATA_WIDTH-1:0] wdata_q; 
-
+logic mem_we;
 
 
 /// Memory
@@ -83,6 +82,7 @@ logic [DATA_WIDTH-1:0] mem [2**ADDR_WIDTH-1:0];
 
 /// Tied off signals (R-26)
 
+assign obi_err_o = 1'b0;
 
 /// State definitions
 
@@ -100,17 +100,18 @@ always_ff@(posedge clk_i or negedge reset_ni) begin
         state <= RESET;
     end
     else begin
-        state <= nextstate;
-        addr_q <= obi_addr_i;
-        wdata_q <= obi_wdata_i;
+        state <= nextstate;        
+        if(obi_req_i) addr_q <= obi_addr_i; 
+        if(mem_we) mem[obi_addr_i] <= obi_wdata_i;
     end
 end
 
 always_comb begin
     obi_rdata_o = 'b0;
+    mem_we = 'b0;
     case(state)
         RESET:
-            nextstate = state;
+           nextstate = state;
         IDLE:
            if(!obi_we_i && obi_req_i) begin
                 nextstate = READ;
@@ -119,18 +120,22 @@ always_comb begin
            else if(obi_we_i && obi_req_i) begin
                 nextstate = WRITE;
                 //Capture incoming data on next clk edge  
+                mem_we = 1'b1; 
            end
            else nextstate = IDLE;
-       READ:
+       READ: begin
            obi_rdata_o = mem[addr_q];
            if (obi_rready_i) nextstate = IDLE;
            else nextstate = READ;
-       WRITE:
+           end
+       WRITE: begin
            // This is supposed to be undef but we can echo back the written value
-           mem[addr_q] = wdata_q; 
-           obi_rdata_o = mem[addr_q];
-           if(obi_rready_i) nextstate = IDLE;
+           if(obi_rready_i) begin
+               nextstate = IDLE;
+               mem_we = 1'b0;
+           end
            else nextstate = WRITE;
+       end
     endcase
 end
 

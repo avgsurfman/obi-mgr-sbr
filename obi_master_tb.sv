@@ -90,8 +90,10 @@ initial begin
     we_i = 0;
     addr_i = 'b0; 
     wdata_i = 'b0;
-    obi_gnt_i = 0;
-    obi_rvalid_i = 0;
+    obi_gnt_i = 'b0;
+    obi_rvalid_i = 'b0;
+    // not supported by iverilog
+    //@posedge (clk_i);
     #5;
     reset_ni = 0; 
     #5;
@@ -107,20 +109,26 @@ initial begin
     req_i = 1; 
     addr_i = 'hDEADBEEF;
     // Wait for a gnt request.
-    #5;
+    #5; //rising clock edge
     obi_gnt_i = 1;
-    #5;
+    #11;
     //check on posedge
-    //assert(dut.state == 3'b011) else begin
-    //    $error("Failed to Acknowledge GNT! Actual value: %h", dut.state);
-    //    $stop;
-    //end
+    assert(obi_req_o == 1'b0) else begin
+        $error("Failed to Acknowledge GNT! Actual value: %h", dut.state);
+        $stop;
+    end
     #10;
     obi_gnt_i = 0;
     obi_rvalid_i = 1;
     obi_rdata_i = 'h1A73BEEF;
     #10;
     assert(rsp_o == 'h1A73BEEF) else $error("Failed to receive the read signal.");
+    $display("Test 2. Write arb data.");
+    we_i = 1;
+    req_i = 1;
+    //addr_i = 
+    //#10;
+     
     $display("All tests passed successfully");
     $stop; 
 
