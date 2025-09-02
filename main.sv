@@ -1,5 +1,8 @@
-/// OBI Master-2-Slaves communication using
-/// OBI Mux-demux
+// OBI Master-2-Slaves communication using
+// OBI Mux-demux
+// Originally created by Leo Mosser (mole99 @ github.com).
+// (Slightly) Modified by Franciszek Moszczuk (avgsurfman @ github.com).
+// Licensed under Apache 2.0 License.
 
 module add_compare import soc_pkg::*;
 (
