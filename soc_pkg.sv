@@ -1,7 +1,10 @@
 // Struct definition file. Contains OBI Bus definitions.
 // Originally created by Leo Mosser (mole99 @ github.com).
 // (Slightly) Modified by Franciszek Moszczuk (avgsurfman @ github.com).
-// Licensed under Apache 2.0 License.
+// Licensed under the Apache 2.0 License.
+
+// SPDX-FileCopyrightText: © 2025 Leo Moser <leo.moser@pm.me>
+// SPDX-License-Identifier: Apache-2.0
 
 package soc_pkg;
 
@@ -53,19 +56,20 @@ package soc_pkg;
     typedef enum int {
         PeriphError         = 0,
         PeriphFoo        = 1,
-        PeriphBar        = 2,
+        PeriphBar        = 2
     } periph_outputs_e;
 
     localparam addr_map_rule_t [NumPeriphRules-1:0] periph_addr_map = '{                                        // 0: OBI Error (default)
         '{ idx: PeriphFoo,  start_addr: FooAddrOffset,  end_addr: FooAddrOffset + FooAddrRange },    // 1: Foo (Slave 1)
-        '{ idx: PeriphBar,   start_addr: BarAddrOffset,   end_addr: BarAddrOffset  + BarAddrRange  }, // 2: Bar (Slave 2)
+        '{ idx: PeriphBar,   start_addr: BarAddrOffset,   end_addr: BarAddrOffset  + BarAddrRange  } // 2: Bar (Slave 2)
     };
     
     // ---------------------------------------------
 
     /// OBI subordinate configuration (from the interconnect to a subordinate device)
     localparam obi_pkg::obi_cfg_t SbrObiCfg = '{
-          UseRReady:   1'b0,
+          // rready is used
+          UseRReady:   1'b1,
           CombGnt:     1'b0,
           AddrWidth:     32,
           DataWidth:     32,

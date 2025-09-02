@@ -1,19 +1,21 @@
-// OBI Master-2-Slaves communication using
-// OBI Mux-demux
+// OBI Master-2-Slaves communication using Mux-demux
 // Originally created by Leo Mosser (mole99 @ github.com).
-// (Slightly) Modified by Franciszek Moszczuk (avgsurfman @ github.com).
+// Modified by Franciszek Moszczuk (avgsurfman @ github.com).
 // Licensed under Apache 2.0 License.
+
+// SPDX-FileCopyrightText: © 2025 Leo Moser <leo.moser@pm.me>
+// SPDX-License-Identifier: Apache-2.0
 
 module add_compare import soc_pkg::*;
 (
     input logic clk_i,
     input logic rst_ni,
-    output logic [7:0] err_cnt_o
+    //output logic [7:0] err_cnt_o,
     output logic [7:0] pc_o
 );   
     //// Local Params
-    localparam unsigned int DATA_WIDTH = 32;
-    localparam unsigned int ADDR_WIDTH = 32;
+    localparam DATA_WIDTH = 32;
+    localparam ADDR_WIDTH = 32;
 
 
     //// Wires
@@ -25,6 +27,8 @@ module add_compare import soc_pkg::*;
 
     //// State declaration
 
+
+    /*
     typedef enum logic [3:0] { 
          FETCH = 1'h0,
          ADD   = 1'h1,
@@ -45,8 +49,18 @@ module add_compare import soc_pkg::*;
         else begin
            if(increment) PC = PC + 1;
         end
-
-
+    */
+    // ---------------
+    // Main FSM
+    // Like, is it even necessary?
+    // I don't need a control unit.
+    // Nor do I know how to make one.
+    // This is literally TB in hardware.
+    // This is bad.
+    // What I need is a good testbench.
+    // --------------- 
+     
+    /*
     always_ff@(posedge clk_i or negedge rst_ni)
 	if (!rst_ni) state <= FETCH;
         else state <= nextstate;
@@ -74,6 +88,8 @@ module add_compare import soc_pkg::*;
             // compare regs
         endcase 
     end
+    */
+ 
 
     // -----------------
     // Manager buses into Mux
@@ -217,7 +233,7 @@ module add_compare import soc_pkg::*;
         .COMB_GNT (0)
     ) master (
         .clk_i (clk_i),
-        .reset_ni (reset_ni),
+        .reset_ni (rst_ni),
         //// Controler signals
         //// TODO: FILL THIS OUT
         .req_i (),
@@ -240,9 +256,6 @@ module add_compare import soc_pkg::*;
         .obi_err_i (obi_err_i)
     );
  
-  
-
-  
 
   // -----------------
   // Peripherals
@@ -304,8 +317,64 @@ module add_compare import soc_pkg::*;
        .obi_rsp_o  ( error_obi_rsp )
      );
 
+    //// Slave signals
+    /// Foo
+    // A Channel signals
+    logic foo_req_i;
+    logic foo_gnt_o;
+    logic [ADDR_WIDTH-1:0] foo_addr_i;
+    logic foo_we_i;
+    logic [DATA_WIDTH/8-1:0] foo_be_i;
+    logic [DATA_WIDTH-1:0] foo_wdata_i; 
+     
+    // R Channel signals 
+    logic foo_rvalid_o;
+    logic foo_rready_i;  
+    logic [DATA_WIDTH-1:0] foo_rdata_o;
+    logic foo_err_o;
 
-   
+    assign foo_req_i = foo_obi_req.req;
+    assign foo_gnt_o = foo_obi_rsp.gnt;
+    assign foo_addr_i = foo_obi_req.a.addr;
+    assign foo_we_i = foo_obi_req.a.we;
+    assign foo_be_i = foo_obi_req.a.be;
+    assign foo_wdata_i = foo_obi_req.a.wdata;
+    
+    assign foo_rvalid_o = foo_obi_rsp.rvalid;
+    assign foo_rready_i = foo_obi_rsp.rrready;
+    assign foo_rdata_o = foo_obi_rsp.r.rdata;
+    assign foo_err_o = foo_obi_rsp.r.err;
+ 
+
+    //// Bar 
+    // A Channel signals
+    logic bar_req_i;
+    logic bar_gnt_o;
+    logic [ADDR_WIDTH-1:0] bar_addr_i;
+    logic bar_we_i;
+    logic [DATA_WIDTH/8-1:0] bar_be_i;
+    logic [DATA_WIDTH-1:0] bar_wdata_i; 
+     
+    // R Channel signals 
+    logic bar_rvalid_o;
+    logic bar_rready_i;  
+    logic [DATA_WIDTH-1:0] bar_rdata_o;
+    logic bar_err_o;
+    
+    assign bar_req_i = bar_obi_req.req;
+    assign bar_gnt_o = bar_obi_rsp.gnt;
+    assign bar_addr_i = bar_obi_req.a.addr;
+    assign bar_we_i = bar_obi_req.a.we;
+    assign bar_be_i = bar_obi_req.a.be;
+    assign bar_wdata_i = bar_obi_req.a.wdata;
+    
+    assign bar_rvalid_o = bar_obi_rsp.rvalid;
+    assign bar_rready_i = bar_obi_rsp.rrready;
+    assign bar_rdata_o = bar_obi_rsp.r.rdata;
+    assign bar_err_o = bar_obi_rsp.r.err;
+    
+    //// Slave Instantiation
+    
     obi_slave #(
         .ADDR_WIDTH (32), 
         .DATA_WIDTH (32),
@@ -318,22 +387,21 @@ module add_compare import soc_pkg::*;
         .COMB_GNT (0)
     ) foo (
        .clk_i (clk_i),
-       .reset_ni (reset_ni),
+       .reset_ni (rst_ni),
        //// A-channel signals
-       .obi_req_i (),
-       .obi_gnt_o (),
-       .obi_addr_i (),
-       .obi_we_i (),
-       .obi_be_i (),
-       .obi_wdata_i (),
+       .obi_req_i (foo_req_i),
+       .obi_gnt_o (foo_gnt_o),
+       .obi_addr_i (foo_addr_i),
+       .obi_we_i (foo_we_i),
+       .obi_be_i (foo_be_i),
+       .obi_wdata_i (foo_wdata_i),
        
         //// R-Channel signals 
-       .obi_rvalid_o (),
-       .obi_rready_i (),
-       .obi_rdata_o (),
-       .obi_err_o ()
+       .obi_rvalid_o (foo_rvalid_o),
+       .obi_rready_i (foo_rready_i),
+       .obi_rdata_o (foo_rdata_o),
+       .obi_err_o (foo_err_o)
     );
-
 
     obi_slave #(
         .ADDR_WIDTH (32), 
@@ -347,19 +415,20 @@ module add_compare import soc_pkg::*;
         .COMB_GNT (0)
     ) bar (
        .clk_i (clk_i),
-       .reset_ni (reset_ni),
+       .reset_ni (rst_ni),
        //// A-channel signals
-       .obi_req_i (),
-       .obi_gnt_o (),
-       .obi_addr_i (),
-       .obi_we_i (),
-       .obi_be_i (),
-       .obi_wdata_i (),
+       .obi_req_i (bar_req_i),
+       .obi_gnt_o (bar_gnt_o),
+       .obi_addr_i (bar_addr_i),
+       .obi_we_i (bar_we_i),
+       .obi_be_i (bar_be_i),
+       .obi_wdata_i (bar_wdata_i),
        
         //// R-Channel signals 
-       .obi_rvalid_o (),
-       .obi_rready_i (),
-       .obi_rdata_o (),
-       .obi_err_o ()
+       .obi_rvalid_o (bar_rvalid_o),
+       .obi_rready_i (bar_rready_i),
+       .obi_rdata_o (bar_rdata_o),
+       .obi_err_o (bar_err_o)
     );
+
 endmodule

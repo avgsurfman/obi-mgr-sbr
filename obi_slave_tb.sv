@@ -79,7 +79,7 @@ initial begin
     
     
     // @posedge is not supported by iverilog
-    // :/ 
+    // (systemverilog.dev) 
     #5; //posedge
     reset_ni = 1'b0; 
     #5;
