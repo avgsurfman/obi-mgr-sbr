@@ -82,6 +82,20 @@ logic out_of_range;
 
 logic [DATA_WIDTH-1:0] mem [2**MEM_WIDTH-1:0];
 
+always_ff@(posedge clk_i) begin
+    if(mem_we) mem[obi_addr_i] <= obi_wdata_i;
+end
+
+/// Chip-enable registers
+
+always_ff@(posedge clk_i or negedge reset_ni) begin
+    if(!reset_ni) begin
+        addr_q <= '0;
+    end
+    else if(obi_req_i) begin
+        addr_q <= obi_addr_i; 
+    end
+end
 
 /// Tied off signals (R-26)
 
@@ -102,9 +116,7 @@ always_ff@(posedge clk_i or negedge reset_ni) begin
         state <= RESET;
     end
     else begin
-        state <= nextstate;        
-        if(obi_req_i) addr_q <= obi_addr_i; 
-        if(mem_we) mem[obi_addr_i] <= obi_wdata_i;
+        state <= nextstate;
     end
 end
 

@@ -78,11 +78,34 @@ module obi_master#(
 
 logic [7:0] err_cnt_q;
 
+always_ff @(posedge clk_i or negedge reset_ni) begin
+    if (!reset_ni) begin
+        err_cnt_q <= 8'h00;
+    end
+    else if(obi_err_i) begin
+        err_cnt_q <= err_cnt_q + 1; 
+    end
+end
+
 /// Necessary regs & wires
 
 logic [ADDR_WIDTH-1:0] addr_q;
 logic [DATA_WIDTH-1:0] rdata_q, rdata_d;
 logic [DATA_WIDTH-1:0] wdata_q;
+
+always_ff @(posedge clk_i or negedge reset_ni) begin
+    if (!reset_ni) begin
+        rdata_q <= '0;
+        addr_q <= '0;
+        rdata_q <= '0;
+    end
+    else begin
+        // Regs sampled on clk'
+        addr_q <= addr_i;
+        wdata_q <= wdata_i; 
+        rdata_q <= rdata_d;
+    end
+end
 
 /// Tied off signals (R-26)
 
@@ -109,19 +132,8 @@ statetype state, nextstate;
 
 /// Reset and next-state logic
 always_ff @(posedge clk_i or negedge reset_ni) begin
-    if (!reset_ni) begin
-        state <= RESET;
-        rdata_q <= '0;
-        err_cnt_q <= 8'h00;
-    end
-    else begin
-        state <= nextstate;
-        // Sampled and sent on clk'
-        addr_q <= addr_i;
-        wdata_q <= wdata_i; 
-        rdata_q <= rdata_d;
-    if(obi_err_i) err_cnt_q <= err_cnt_q + 1; 
-    end
+    if (!reset_ni) state <= RESET;
+    else state <= nextstate;
 end
 
 always_comb begin 
