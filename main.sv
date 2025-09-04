@@ -106,7 +106,7 @@ module add_compare import soc_pkg::*;
     assign master_mux_obi_req.a.aid = '0;
     assign master_mux_obi_req.a.be = '1;
     assign master_mux_obi_req.a.wdata = '0;
-    assign master_mux_obi_req.a.optional = '0;
+    //assign master_mux_obi_req.a.optional = '0;
     
     
     // ---------------------
@@ -142,7 +142,7 @@ module add_compare import soc_pkg::*;
     // ---------------
 
     assign error_obi_req = all_periph_obi_req[PeriphError];
-    assign all_periph_obi_rsp = error_obi_rsp;
+    assign all_periph_obi_rsp[PeriphError] = error_obi_rsp;
 
     assign foo_obi_req = all_periph_obi_req[PeriphFoo];
     assign all_periph_obi_rsp[PeriphFoo] = foo_obi_rsp;
@@ -190,7 +190,7 @@ module add_compare import soc_pkg::*;
     ////  MASTER
     /// A Channel signals
     assign obi_req_o = master_mux_obi_req.req;
-    assign obi_gnt_i = master_mux_obi_req.gnt;
+    assign obi_gnt_i = master_mux_obi_rsp.gnt;
     assign obi_addr_o = master_mux_obi_req.a.addr;
     assign obi_we_o = master_mux_obi_req.a.we;
     assign obi_be_o = master_mux_obi_req.a.be;
@@ -198,7 +198,7 @@ module add_compare import soc_pkg::*;
      
     /// R Channel signals 
     assign obi_rvalid_i = master_mux_obi_rsp.rvalid;
-    assign obi_rready_o = master_mux_obi_rsp.ready;  
+    assign obi_rready_o = master_mux_obi_rsp.rready;  
     assign obi_rdata_i = master_mux_obi_rsp.r.rdata;
     assign obi_err_i = master_mux_obi_rsp.r.err;
     // Master <-> Obi Mux
@@ -269,8 +269,7 @@ module add_compare import soc_pkg::*;
 
   // demultiplex to peripherals according to address map
   // Note: this macro just just does log2 of N 
-  //logic [cf_math_pkg::idx_width(NumPeriphs)-1:0] periph_idx;
-  logic [1:0] periph_idx;
+  logic [cf_math_pkg::idx_width(NumPeriphs)-1:0] periph_idx;
   
   // checks whether the incoming adress falls within proper range
   // defined in the soc_pkg file and if so selects the matching id 
@@ -347,7 +346,7 @@ module add_compare import soc_pkg::*;
     assign foo_wdata_i = foo_obi_req.a.wdata;
     
     assign foo_rvalid_o = foo_obi_rsp.rvalid;
-    assign foo_rready_i = foo_obi_rsp.rrready;
+    assign foo_rready_i = foo_obi_rsp.rready;
     assign foo_rdata_o = foo_obi_rsp.r.rdata;
     assign foo_err_o = foo_obi_rsp.r.err;
  
@@ -375,7 +374,7 @@ module add_compare import soc_pkg::*;
     assign bar_wdata_i = bar_obi_req.a.wdata;
     
     assign bar_rvalid_o = bar_obi_rsp.rvalid;
-    assign bar_rready_i = bar_obi_rsp.rrready;
+    assign bar_rready_i = bar_obi_rsp.rready;
     assign bar_rdata_o = bar_obi_rsp.r.rdata;
     assign bar_err_o = bar_obi_rsp.r.err;
     
