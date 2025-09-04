@@ -6,6 +6,11 @@
 // SPDX-FileCopyrightText: © 2025 Leo Moser <leo.moser@pm.me>
 // SPDX-License-Identifier: Apache-2.0
 
+`include "obi_slave.sv"
+`include "obi_master.sv"
+`include "soc_pkg.sv"
+`include "./ip/obi/src/obi_pkg.sv"
+
 module add_compare import soc_pkg::*;
 (
     input logic clk_i,
