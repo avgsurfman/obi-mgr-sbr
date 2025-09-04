@@ -1,0 +1,6 @@
+[submodule "ip/obi"]
+	path = ip/obi
+	url = https://github.com/pulp-platform/obi
+[submodule "ip/common_cells"]
+	path = ip/common_cells
+	url = https://github.com/pulp-platform/common_cells/
