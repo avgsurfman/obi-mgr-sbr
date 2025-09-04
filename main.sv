@@ -9,6 +9,7 @@
 `include "obi_slave.sv"
 `include "obi_master.sv"
 `include "soc_pkg.sv"
+`include "./ip/common_cells/src/cf_math_pkg.sv"
 `include "./ip/obi/src/obi_pkg.sv"
 
 module add_compare import soc_pkg::*;
