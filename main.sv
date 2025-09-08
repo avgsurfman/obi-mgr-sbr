@@ -63,7 +63,7 @@ module add_compare import soc_pkg::*;
         else begin
            if(increment) PC = PC + 1;
         end
-    */
+    
     // ---------------
     // Main FSM
     // Like, is it even necessary?
@@ -74,7 +74,7 @@ module add_compare import soc_pkg::*;
     // What I need is a good testbench.
     // --------------- 
      
-    /*
+    
     always_ff@(posedge clk_i or negedge rst_ni)
 	if (!rst_ni) state <= FETCH;
         else state <= nextstate;
