@@ -11,6 +11,8 @@
 `include "soc_pkg.sv"
 `include "./ip/common_cells/src/cf_math_pkg.sv"
 `include "./ip/common_cells/src/delta_counter.sv"
+`include "./ip/common_cells/include/common_cells/assertions.svh"
+`include "./ip/common_cells/src/fifo_v3.sv"
 `include "./ip/obi/src/obi_pkg.sv"
 `include "./ip/obi/include/obi/assign.svh"
 `include "./ip/obi/src/obi_mux.sv"
@@ -107,20 +109,12 @@ module add_compare import soc_pkg::*;
     // Manager buses into Demux
     // -----------------
 
-    sbr_obi_req_t master_mux_obi_req;
-    sbr_obi_rsp_t master_mux_obi_rsp;
-    assign master_mux_obi_req.a.aid = '0;
-    assign master_mux_obi_req.a.be = '1;
-    assign master_mux_obi_req.a.wdata = '0;
-    //assign master_mux_obi_req.a.optional = '0;
+    sbr_obi_req_t master_demux_obi_req;
+    sbr_obi_rsp_t master_demux_obi_rsp;
+    assign master_demux_obi_req.a.aid = '0;
+    //assign master_demux_obi_req.a.wdata = '0;
+    //assign master_demux_obi_req.a.optional = '0;
     
-    // NOT NEEDED - you just need one DEMUX instead. 
-    // ---------------------
-    // Mux to Demux bus
-    // ---------------------
-    //sbr_obi_req_t mux_demux_obi_req;
-    //sbr_obi_rsp_t mux_demux_obi_rsp;
-
 
     // -----------------
     // Peripheral buses
@@ -193,43 +187,19 @@ module add_compare import soc_pkg::*;
 
     ///// signal assignments
     ////  master
-    /// a channel signals
-    assign obi_req_o = master_mux_obi_req.req;
-    assign obi_gnt_i = master_mux_obi_rsp.gnt;
-    assign obi_addr_o = master_mux_obi_req.a.addr;
-    assign obi_we_o = master_mux_obi_req.a.we;
-    assign obi_be_o = master_mux_obi_req.a.be;
-    assign obi_wdata_o = master_mux_obi_req.a.wdata; 
+    /// A channel signals
+    //assign master_demux_obi_req.req = obi_req_o;
+    //assign obi_gnt_i = master_demux_obi_rsp.gnt;
+    //assign obi_addr_o = master_demux_obi_req.a.addr;
+    //assign obi_we_o = master_demux_obi_req.a.we;
+    //assign obi_be_o = master_demux_obi_req.a.be;
+    //assign obi_wdata_o = master_demux_obi_req.a.wdata; 
      
-    /// r channel signals 
-    assign obi_rvalid_i = master_mux_obi_rsp.rvalid;
-    assign obi_rready_o = master_mux_obi_req.rready;  
-    assign obi_rdata_i = master_mux_obi_rsp.r.rdata;
-    assign obi_err_i = master_mux_obi_rsp.r.err;
-    // master <-> obi mux
-    /*
-    obi_mux #(
-        .SbrPortObiCfg      ( SbrObiCfg     ),
-        
-        .sbr_port_obi_req_t   ( sbr_obi_req_t ),
-        .sbr_port_a_chan_t    ( sbr_obi_a_chan_t ),
-        .sbr_port_obi_rsp_t   ( sbr_obi_rsp_t ),
-        .sbr_port_r_chan_t    ( sbr_obi_r_chan_t ),
-        
-        .NumSbrPorts ( NumManagers   ),
-        .NumMaxTrans ( 1             )
-      ) i_obi_mux (
-        .clk_i      ( clk_i  ),
-        .rst_ni     ( rst_ni ),
-        .testmode_i ( 1'b0   ),
-    
-        .sbr_ports_req_i   ( master_mux_obi_req  ),
-        .sbr_ports_rsp_o   ( master_mux_obi_rsp  ),
-    
-        .mgr_port_req_o    ( mux_demux_obi_req ),
-        .mgr_port_rsp_i    ( mux_demux_obi_rsp )
-      );
-    */
+    /// R channel signals 
+    //assign obi_rvalid_i = master_demux_obi_rsp.rvalid;
+    //assign obi_rready_o = master_demux_obi_req.rready;  
+    //assign obi_rdata_i = master_demux_obi_rsp.r.rdata;
+    //assign obi_err_i = master_demux_obi_rsp.r.err;
 
     //// Master device
     obi_master #(
@@ -253,18 +223,18 @@ module add_compare import soc_pkg::*;
         .rsp_o (),
         .wdata_i (),
         //// A-channel signals
-        .obi_req_o (obi_req_o),
-        .obi_gnt_i (obi_gnt_i),
-        .obi_addr_o (obi_addr_o),
-        .obi_we_o (obi_we_o),
-        .obi_be_o (obi_be_o),
-        .obi_wdata_o (obi_wdata_o),
+        .obi_req_o (master_demux_obi_req.req),
+        .obi_gnt_i (master_demux_obi_rsp.gnt),
+        .obi_addr_o (master_demux_obi_req.a.addr),
+        .obi_we_o (master_demux_obi_req.a.we),
+        .obi_be_o (master_demux_obi_req.a.be),
+        .obi_wdata_o (master_demux_obi_req.a.wdata),
         
          //// R-Channel signals 
-        .obi_rvalid_i (obi_rvalid_i),
-        .obi_rready_o (obi_rready_o),
-        .obi_rdata_i (obi_rdata_i),
-        .obi_err_i (obi_err_i)
+        .obi_rvalid_i (master_demux_obi_rsp.rvalid),
+        .obi_rready_o (master_demux_obi_req.rready),
+        .obi_rdata_i (master_demux_obi_rsp.r.rdata),
+        .obi_err_i (master_demux_obi_rsp.r.err)
     );
  
 
@@ -286,13 +256,13 @@ module add_compare import soc_pkg::*;
 
     // last rule wins
     for (int i=0; i<NumPeriphRules; i++) begin
-        if ((master_mux_obi_req.a.addr >= periph_addr_map[i].start_addr) &&
-        ((master_mux_obi_req.a.addr < periph_addr_map[i].end_addr) || (periph_addr_map[i].end_addr == '0))) periph_idx = periph_addr_map[i].idx;
+        if ((master_demux_obi_req.a.addr >= periph_addr_map[i].start_addr) &&
+        ((master_demux_obi_req.a.addr < periph_addr_map[i].end_addr) || (periph_addr_map[i].end_addr == '0))) periph_idx = periph_addr_map[i].idx;
     end
   end
   
   //logic [31:0] mux_demux_obi_req_a_addr;
-  //assign mux_demux_obi_req_a_addr = master_mux_obi_req.a.addr;
+  //assign mux_demux_obi_req_a_addr = master_demux_obi_req.a.addr;
 
     obi_demux #(
       .ObiCfg      ( SbrObiCfg       ),
@@ -305,8 +275,8 @@ module add_compare import soc_pkg::*;
       .rst_ni ( rst_ni ),
 
       .sbr_port_select_i ( periph_idx         ),
-      .sbr_port_req_i    ( master_mux_obi_req ),
-      .sbr_port_rsp_o    ( master_mux_obi_rsp ),
+      .sbr_port_req_i    ( master_demux_obi_req ),
+      .sbr_port_rsp_o    ( master_demux_obi_rsp ),
 
       .mgr_ports_req_o   ( all_periph_obi_req ),
       .mgr_ports_rsp_i   ( all_periph_obi_rsp )
@@ -326,62 +296,6 @@ module add_compare import soc_pkg::*;
        .obi_req_i  ( error_obi_req ),
        .obi_rsp_o  ( error_obi_rsp )
      );
-
-    //// Slave signals
-    /// Foo
-    // A Channel signals
-    logic foo_req_i;
-    logic foo_gnt_o;
-    logic [ADDR_WIDTH-1:0] foo_addr_i;
-    logic foo_we_i;
-    logic [DATA_WIDTH/8-1:0] foo_be_i;
-    logic [DATA_WIDTH-1:0] foo_wdata_i; 
-     
-    // R Channel signals 
-    logic foo_rvalid_o;
-    logic foo_rready_i;  
-    logic [DATA_WIDTH-1:0] foo_rdata_o;
-    logic foo_err_o;
-
-    assign foo_req_i = foo_obi_req.req;
-    assign foo_gnt_o = foo_obi_rsp.gnt;
-    assign foo_addr_i = foo_obi_req.a.addr;
-    assign foo_we_i = foo_obi_req.a.we;
-    assign foo_be_i = foo_obi_req.a.be;
-    assign foo_wdata_i = foo_obi_req.a.wdata;
-    
-    assign foo_rvalid_o = foo_obi_rsp.rvalid;
-    assign foo_rready_i = foo_obi_req.rready;
-    assign foo_rdata_o = foo_obi_rsp.r.rdata;
-    assign foo_err_o = foo_obi_rsp.r.err;
- 
-
-    //// Bar 
-    // A Channel signals
-    logic bar_req_i;
-    logic bar_gnt_o;
-    logic [ADDR_WIDTH-1:0] bar_addr_i;
-    logic bar_we_i;
-    logic [DATA_WIDTH/8-1:0] bar_be_i;
-    logic [DATA_WIDTH-1:0] bar_wdata_i; 
-     
-    // R Channel signals 
-    logic bar_rvalid_o;
-    logic bar_rready_i;  
-    logic [DATA_WIDTH-1:0] bar_rdata_o;
-    logic bar_err_o;
-    
-    assign bar_req_i = bar_obi_req.req;
-    assign bar_gnt_o = bar_obi_rsp.gnt;
-    assign bar_addr_i = bar_obi_req.a.addr;
-    assign bar_we_i = bar_obi_req.a.we;
-    assign bar_be_i = bar_obi_req.a.be;
-    assign bar_wdata_i = bar_obi_req.a.wdata;
-    
-    assign bar_rvalid_o = bar_obi_rsp.rvalid;
-    assign bar_rready_i = bar_obi_req.rready;
-    assign bar_rdata_o = bar_obi_rsp.r.rdata;
-    assign bar_err_o = bar_obi_rsp.r.err;
     
     //// Slave Instantiation
     
@@ -399,18 +313,18 @@ module add_compare import soc_pkg::*;
        .clk_i (clk_i),
        .reset_ni (rst_ni),
        //// A-channel signals
-       .obi_req_i (foo_req_i),
-       .obi_gnt_o (foo_gnt_o),
-       .obi_addr_i (foo_addr_i),
-       .obi_we_i (foo_we_i),
-       .obi_be_i (foo_be_i),
-       .obi_wdata_i (foo_wdata_i),
+       .obi_req_i (foo_obi_req.req),
+       .obi_gnt_o (foo_obi_rsp.gnt),
+       .obi_addr_i (foo_obi_req.a.addr),
+       .obi_we_i (foo_obi_req.a.we),
+       .obi_be_i (foo_obi_req.a.be),
+       .obi_wdata_i (foo_obi_req.a.wdata),
        
         //// R-Channel signals 
-       .obi_rvalid_o (foo_rvalid_o),
-       .obi_rready_i (foo_rready_i),
-       .obi_rdata_o (foo_rdata_o),
-       .obi_err_o (foo_err_o)
+       .obi_rvalid_o (foo_obi_rsp.rvalid),
+       .obi_rready_i (foo_obi_req.rready),
+       .obi_rdata_o (foo_obi_rsp.r.rdata),
+       .obi_err_o (foo_obi_rsp.r.err)
     );
 
     obi_slave #(
@@ -427,18 +341,18 @@ module add_compare import soc_pkg::*;
        .clk_i (clk_i),
        .reset_ni (rst_ni),
        //// A-channel signals
-       .obi_req_i (bar_req_i),
-       .obi_gnt_o (bar_gnt_o),
-       .obi_addr_i (bar_addr_i),
-       .obi_we_i (bar_we_i),
-       .obi_be_i (bar_be_i),
-       .obi_wdata_i (bar_wdata_i),
+       .obi_req_i (bar_obi_req.req),
+       .obi_gnt_o (bar_obi_rsp.gnt),
+       .obi_addr_i (bar_obi_req.a.addr),
+       .obi_we_i (bar_obi_req.a.we),
+       .obi_be_i (bar_obi_req.a.be),
+       .obi_wdata_i (bar_obi_req.a.wdata),
        
         //// R-Channel signals 
-       .obi_rvalid_o (bar_rvalid_o),
-       .obi_rready_i (bar_rready_i),
-       .obi_rdata_o (bar_rdata_o),
-       .obi_err_o (bar_err_o)
+       .obi_rvalid_o (bar_obi_rsp.rvalid),
+       .obi_rready_i (bar_obi_req.rready),
+       .obi_rdata_o (bar_obi_rsp.r.rdata),
+       .obi_err_o (bar_obi_rsp.r.err)
     );
 
 endmodule
