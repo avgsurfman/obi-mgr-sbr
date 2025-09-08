@@ -69,7 +69,7 @@ package soc_pkg;
     /// OBI subordinate configuration (from the interconnect to a subordinate device)
     localparam obi_pkg::obi_cfg_t SbrObiCfg = '{
           // rready is used
-          UseRReady:   1'b1,
+          UseRReady:      1,
           CombGnt:     1'b0,
           AddrWidth:     32,
           DataWidth:     32,
@@ -95,6 +95,7 @@ package soc_pkg;
     typedef struct packed {
         sbr_obi_a_chan_t a;
         logic            req;
+        logic            rready;
     } sbr_obi_req_t;
 
     /// OBI Xbar <-> Subordinate response channel
@@ -110,8 +111,8 @@ package soc_pkg;
         sbr_obi_r_chan_t r;
         logic            gnt;
         logic            rvalid;
-        logic            rready;
     } sbr_obi_rsp_t;
+
 
 endpackage
 

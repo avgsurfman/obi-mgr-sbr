@@ -10,7 +10,13 @@
 `include "obi_master.sv"
 `include "soc_pkg.sv"
 `include "./ip/common_cells/src/cf_math_pkg.sv"
+`include "./ip/common_cells/src/delta_counter.sv"
 `include "./ip/obi/src/obi_pkg.sv"
+`include "./ip/obi/include/obi/assign.svh"
+`include "./ip/obi/src/obi_mux.sv"
+`include "./ip/obi/src/obi_demux.sv"
+`include "./ip/obi/src/obi_err_sbr.sv"
+
 
 module add_compare import soc_pkg::*;
 (
@@ -98,7 +104,7 @@ module add_compare import soc_pkg::*;
  
 
     // -----------------
-    // Manager buses into Mux
+    // Manager buses into Demux
     // -----------------
 
     sbr_obi_req_t master_mux_obi_req;
@@ -108,13 +114,12 @@ module add_compare import soc_pkg::*;
     assign master_mux_obi_req.a.wdata = '0;
     //assign master_mux_obi_req.a.optional = '0;
     
-    
+    // NOT NEEDED - you just need one DEMUX instead. 
     // ---------------------
     // Mux to Demux bus
     // ---------------------
-
-    sbr_obi_req_t mux_demux_obi_req;
-    sbr_obi_rsp_t mux_demux_obi_rsp;
+    //sbr_obi_req_t mux_demux_obi_req;
+    //sbr_obi_rsp_t mux_demux_obi_rsp;
 
 
     // -----------------
@@ -186,9 +191,9 @@ module add_compare import soc_pkg::*;
     logic obi_err_o;
 
 
-    ///// SIGNAL ASSIGNMENTS
-    ////  MASTER
-    /// A Channel signals
+    ///// signal assignments
+    ////  master
+    /// a channel signals
     assign obi_req_o = master_mux_obi_req.req;
     assign obi_gnt_i = master_mux_obi_rsp.gnt;
     assign obi_addr_o = master_mux_obi_req.a.addr;
@@ -196,13 +201,13 @@ module add_compare import soc_pkg::*;
     assign obi_be_o = master_mux_obi_req.a.be;
     assign obi_wdata_o = master_mux_obi_req.a.wdata; 
      
-    /// R Channel signals 
+    /// r channel signals 
     assign obi_rvalid_i = master_mux_obi_rsp.rvalid;
-    assign obi_rready_o = master_mux_obi_rsp.rready;  
+    assign obi_rready_o = master_mux_obi_req.rready;  
     assign obi_rdata_i = master_mux_obi_rsp.r.rdata;
     assign obi_err_i = master_mux_obi_rsp.r.err;
-    // Master <-> Obi Mux
-
+    // master <-> obi mux
+    /*
     obi_mux #(
         .SbrPortObiCfg      ( SbrObiCfg     ),
         
@@ -218,13 +223,13 @@ module add_compare import soc_pkg::*;
         .rst_ni     ( rst_ni ),
         .testmode_i ( 1'b0   ),
     
-        .sbr_ports_req_i   ( mgrs_mux_obi_req  ),
-        .sbr_ports_rsp_o   ( mgrs_mux_obi_rsp  ),
+        .sbr_ports_req_i   ( master_mux_obi_req  ),
+        .sbr_ports_rsp_o   ( master_mux_obi_rsp  ),
     
         .mgr_port_req_o    ( mux_demux_obi_req ),
         .mgr_port_rsp_i    ( mux_demux_obi_rsp )
       );
-
+    */
 
     //// Master device
     obi_master #(
@@ -281,27 +286,27 @@ module add_compare import soc_pkg::*;
 
     // last rule wins
     for (int i=0; i<NumPeriphRules; i++) begin
-        if ((mux_demux_obi_req.a.addr >= periph_addr_map[i].start_addr) &&
-        ((mux_demux_obi_req.a.addr < periph_addr_map[i].end_addr) || (periph_addr_map[i].end_addr == '0))) periph_idx = periph_addr_map[i].idx;
+        if ((master_mux_obi_req.a.addr >= periph_addr_map[i].start_addr) &&
+        ((master_mux_obi_req.a.addr < periph_addr_map[i].end_addr) || (periph_addr_map[i].end_addr == '0))) periph_idx = periph_addr_map[i].idx;
     end
   end
   
-  logic [31:0] mux_demux_obi_req_a_addr;
-  assign mux_demux_obi_req_a_addr = mux_demux_obi_req.a.addr;
+  //logic [31:0] mux_demux_obi_req_a_addr;
+  //assign mux_demux_obi_req_a_addr = master_mux_obi_req.a.addr;
 
     obi_demux #(
-      .ObiCfg      ( SbrObiCfg     ),
+      .ObiCfg      ( SbrObiCfg       ),
       .obi_req_t   ( sbr_obi_req_t ),
-      .obi_rsp_t   ( sbr_obi_rsp_t ),
-      .NumMgrPorts ( NumPeriphs    ),
-      .NumMaxTrans ( 1             )
+      .obi_rsp_t   ( sbr_obi_rsp_t   ),
+      .NumMgrPorts ( NumPeriphs      ),
+      .NumMaxTrans ( 1               )
     ) i_obi_demux (
       .clk_i  ( clk_i  ),
       .rst_ni ( rst_ni ),
 
       .sbr_port_select_i ( periph_idx         ),
-      .sbr_port_req_i    ( mux_demux_obi_req  ),
-      .sbr_port_rsp_o    ( mux_demux_obi_rsp  ),
+      .sbr_port_req_i    ( master_mux_obi_req ),
+      .sbr_port_rsp_o    ( master_mux_obi_rsp ),
 
       .mgr_ports_req_o   ( all_periph_obi_req ),
       .mgr_ports_rsp_i   ( all_periph_obi_rsp )
@@ -346,7 +351,7 @@ module add_compare import soc_pkg::*;
     assign foo_wdata_i = foo_obi_req.a.wdata;
     
     assign foo_rvalid_o = foo_obi_rsp.rvalid;
-    assign foo_rready_i = foo_obi_rsp.rready;
+    assign foo_rready_i = foo_obi_req.rready;
     assign foo_rdata_o = foo_obi_rsp.r.rdata;
     assign foo_err_o = foo_obi_rsp.r.err;
  
@@ -374,7 +379,7 @@ module add_compare import soc_pkg::*;
     assign bar_wdata_i = bar_obi_req.a.wdata;
     
     assign bar_rvalid_o = bar_obi_rsp.rvalid;
-    assign bar_rready_i = bar_obi_rsp.rready;
+    assign bar_rready_i = bar_obi_req.rready;
     assign bar_rdata_o = bar_obi_rsp.r.rdata;
     assign bar_err_o = bar_obi_rsp.r.err;
     
