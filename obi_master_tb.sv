@@ -42,6 +42,8 @@ logic obi_rready_o;
 logic [DATA_WIDTH-1:0] obi_rdata_i;
 logic obi_err_i;
 
+logic [7:0] err_cnt_o;
+
 always begin
   clk_i = 0; #5; clk_i = 1; #5;
 end
@@ -76,7 +78,8 @@ obi_master #(
    .obi_rvalid_i (obi_rvalid_i),
    .obi_rready_o (obi_rready_o),
    .obi_rdata_i (obi_rdata_i),
-   .obi_err_i (1'b0)
+   .obi_err_i (obi_err_i),
+   .err_cnt_o (err_cnt_o)
 );
 
 // Initialize signals
@@ -93,7 +96,7 @@ initial begin
     obi_gnt_i = 'b0;
     obi_rvalid_i = 'b0;
     // not supported by iverilog
-    //@posedge (clk_i);
+    // @posedge (clk_i);
     #5;
     reset_ni = 0; 
     #5;
@@ -126,9 +129,34 @@ initial begin
     $display("Test 2. Write arb data.");
     we_i = 1;
     req_i = 1;
-    //addr_i = 
-    //#10;
-     
+    addr_i = 'h0000_8888;
+    wdata_i = 'h8888_0000;
+    #10;
+    assert(obi_wdata_o == 'h8888_0000) else $error("Data not forwarded.");
+    obi_gnt_i = 1;
+    req_i = 0;
+    #10;
+    //TODO: add property that this signal goes 0
+    // on rvalid and rack second clk cycle
+    obi_rvalid_i = 1;
+    #10;
+    
+    $display("Test 3. Increment error counter on bad write");
+    obi_rvalid_i = 0;
+    we_i = 1;
+    req_i = 1;
+    obi_gnt_i = 1;
+    addr_i = 'h0000_F888;
+    wdata_i = 'hF888_0000;
+    #10;
+    obi_err_i = 1;
+    obi_gnt_i = 0;
+    obi_rvalid_i = 1;
+    #10
+    assert(err_cnt_o == 1) else begin
+        $error("Bad error count! %h", err_cnt_o);
+    end
+    
     $display("All tests passed successfully");
     $stop; 
 

@@ -35,6 +35,7 @@ module obi_master#(
    // Data -> Master
    input  logic [DATA_WIDTH-1:0] wdata_i,
 
+
    //// Channel signals
    /// A channel
    // TODO: Change this to use OBI interfaces
@@ -62,7 +63,7 @@ module obi_master#(
    input logic obi_rvalid_i,
    output logic obi_rready_o,  
    input logic [DATA_WIDTH-1:0] obi_rdata_i,
-   input logic obi_err_i
+   input logic obi_err_i,
    /* stubs - optional signals
    input logic [RUSER_WIDTH-1:0] obi_ruser_i,
    input logic [ID_WIDTH-1:0] obi_rid_i,
@@ -71,6 +72,9 @@ module obi_master#(
    output logic obi_rvalidpar_o,
    output logic obi_rreadypar_o,
    input logic [RCHK_WIDTH-1:0] obi_rchk_i */
+
+   //// Addional outputs
+   output [7:0] err_cnt_o
 
 );
 
@@ -86,6 +90,8 @@ always_ff @(posedge clk_i or negedge reset_ni) begin
         err_cnt_q <= err_cnt_q + 1; 
     end
 end
+
+assign err_cnt_o = err_cnt_q;
 
 /// Necessary regs & wires
 

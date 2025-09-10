@@ -1,3 +1,4 @@
 *.out
 *.vcd
 runs/
+obj_dir/*

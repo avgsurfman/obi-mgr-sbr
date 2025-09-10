@@ -20,12 +20,20 @@
 `include "./ip/obi/src/obi_err_sbr.sv"
 
 
-module add_compare import soc_pkg::*;
+module main import soc_pkg::*;
 (
     input logic clk_i,
     input logic rst_ni,
-    //output logic [7:0] err_cnt_o,
-    output logic [7:0] pc_o
+
+    output logic [7:0] err_cnt_o,
+    //output logic [7:0] pc_o,
+
+    input req_i,
+    input we_i,
+    input [31:0] addr_i,
+    output [31:0] rsp_o,
+    input [31:0]wdata_i
+
 );   
     //// Local Params
     localparam DATA_WIDTH = 32;
@@ -38,10 +46,22 @@ module add_compare import soc_pkg::*;
     logic bit_compare;
     logic increment;
      
-
+   
+    /*
+    //// 255 counter
+    logic[7:0] PC;
+    always_ff@(posdedge clk_i or negedge rst_ni)
+        if (!rst_ni) PC <= 32'b0000_0000;
+        else begin
+           if(increment) PC = PC + 1;
+        end
+    */
+    // ---------------
+    // Main FSM
+    // uncomment this if you find this useful at all
+    // --------------- 
+     
     //// State declaration
-
-
     /*
     typedef enum logic [3:0] { 
          FETCH = 1'h0,
@@ -55,26 +75,6 @@ module add_compare import soc_pkg::*;
          INCREMENT = 1'h8
     } statetype;
     statetype state, nextstate;
-    
-    //// 255 counter
-    logic[7:0] PC;
-    always_ff@(posdedge clk_i or negedge rst_ni)
-        if (!rst_ni) PC <= 32'b0000_0000;
-        else begin
-           if(increment) PC = PC + 1;
-        end
-    
-    // ---------------
-    // Main FSM
-    // Like, is it even necessary?
-    // I don't need a control unit.
-    // Nor do I know how to make one.
-    // This is literally TB in hardware.
-    // This is bad.
-    // What I need is a good testbench.
-    // --------------- 
-     
-    
     always_ff@(posedge clk_i or negedge rst_ni)
 	if (!rst_ni) state <= FETCH;
         else state <= nextstate;
@@ -100,7 +100,7 @@ module add_compare import soc_pkg::*;
             default:
             nextstate = FETCH;
             // compare regs
-        endcase 
+        endcase
     end
     */
  
@@ -217,11 +217,11 @@ module add_compare import soc_pkg::*;
         .reset_ni (rst_ni),
         //// Controler signals
         //// TODO: FILL THIS OUT
-        .req_i (),
-        .we_i (),
-        .addr_i (),
-        .rsp_o (),
-        .wdata_i (),
+        .req_i (req_i),
+        .we_i (we_i),
+        .addr_i (addr_i),
+        .rsp_o (rsp_o),
+        .wdata_i (wdata_i),
         //// A-channel signals
         .obi_req_o (master_demux_obi_req.req),
         .obi_gnt_i (master_demux_obi_rsp.gnt),
@@ -234,7 +234,9 @@ module add_compare import soc_pkg::*;
         .obi_rvalid_i (master_demux_obi_rsp.rvalid),
         .obi_rready_o (master_demux_obi_req.rready),
         .obi_rdata_i (master_demux_obi_rsp.r.rdata),
-        .obi_err_i (master_demux_obi_rsp.r.err)
+        .obi_err_i (master_demux_obi_rsp.r.err),
+
+        .err_cnt_o (err_cnt_o)
     );
  
 
@@ -250,14 +252,14 @@ module add_compare import soc_pkg::*;
   // defined in the soc_pkg file and if so selects the matching id 
   // latter adresses have priority
   // else it goes into the Error device
-  always_comb begin
+  always_comb begin : addr_resolver
     // default
     periph_idx = 0; 
 
     // last rule wins
     for (int i=0; i<NumPeriphRules; i++) begin
         if ((master_demux_obi_req.a.addr >= periph_addr_map[i].start_addr) &&
-        ((master_demux_obi_req.a.addr < periph_addr_map[i].end_addr) || (periph_addr_map[i].end_addr == '0))) periph_idx = periph_addr_map[i].idx;
+        ((master_demux_obi_req.a.addr < periph_addr_map[i].end_addr) || (periph_addr_map[i].end_addr == '0))) periph_idx = periph_addr_map[i].idx[cf_math_pkg::idx_width(NumPeriphs)-1:0];
     end
   end
   

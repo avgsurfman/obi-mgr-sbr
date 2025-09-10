@@ -44,10 +44,10 @@ package soc_pkg;
     /////////////////////////////
 
     localparam bit [31:0] FooAddrOffset           = 32'h0000_0000;
-    localparam bit [31:0] FooAddrRange            = 32'h0000_0100; 
+    localparam bit [31:0] FooAddrRange            = 32'h0000_000F; 
 
-    localparam bit [31:0] BarAddrOffset            = 32'h1000_0000;
-    localparam bit [31:0] BarAddrRange             = 32'h0000_0100; // 256 * 32 bit words
+    localparam bit [31:0] BarAddrOffset            = 32'h2000_0000;
+    localparam bit [31:0] BarAddrRange             = 32'h0000_0008; // 256 * 32 bit words
 
     localparam int unsigned NumPeriphRules  = 2;
     localparam int unsigned NumPeriphs      = NumPeriphRules + 1; // additional OBI error
