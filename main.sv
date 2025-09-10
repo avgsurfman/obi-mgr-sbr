@@ -39,12 +39,6 @@ module main import soc_pkg::*;
     localparam DATA_WIDTH = 32;
     localparam ADDR_WIDTH = 32;
 
-
-    //// Wires
-    logic received_s1, received_s2;
-    logic received_ack;
-    logic bit_compare;
-    logic increment;
      
    
     /*
@@ -55,53 +49,6 @@ module main import soc_pkg::*;
         else begin
            if(increment) PC = PC + 1;
         end
-    */
-    // ---------------
-    // Main FSM
-    // uncomment this if you find this useful at all
-    // --------------- 
-     
-    //// State declaration
-    /*
-    typedef enum logic [3:0] { 
-         FETCH = 1'h0,
-         ADD   = 1'h1,
-         SAVE  = 1'h2,
-         FETCH2 = 1'h3,
-         COMPARE = 1'h4,
-         ERROR = 1'h5,
-         FETCHNEXT = 1'h6,
-         STOP = 1'h7
-         INCREMENT = 1'h8
-    } statetype;
-    statetype state, nextstate;
-    always_ff@(posedge clk_i or negedge rst_ni)
-	if (!rst_ni) state <= FETCH;
-        else state <= nextstate;
-
-    always_comb begin
-        case(state):
-            FETCH:
-            if(received_s1) nextstate = ADD;
-            else nextstate = FETCH;
-            SAVE:
-            nextstate = FETCH2;
-            FETCH2:
-            if(received_s2) nextstate = COMPARE;
-            else nextstate = FETCH2;
-            COMPARE:
-            if(bitcompare) nextstate = FETCHNEXT;
-            else nextstate = ERROR;
-            ERROR:
-            nextstate = FETCHNEXT;
-            FETCH_NEXT:
-            // STOP.
-            nextstate = INCREMENT;
-            default:
-            nextstate = FETCH;
-            // compare regs
-        endcase
-    end
     */
  
 
@@ -149,7 +96,7 @@ module main import soc_pkg::*;
     assign bar_obi_req = all_periph_obi_req[PeriphBar];
     assign all_periph_obi_rsp[PeriphBar] = bar_obi_rsp;
 
-    // ------------------
+    /*// ------------------
     // Interface bindings
     // ------------------
     ///// SIGNAL DECLARATION
@@ -200,6 +147,7 @@ module main import soc_pkg::*;
     //assign obi_rready_o = master_demux_obi_req.rready;  
     //assign obi_rdata_i = master_demux_obi_rsp.r.rdata;
     //assign obi_err_i = master_demux_obi_rsp.r.err;
+    */
 
     //// Master device
     obi_master #(
@@ -263,8 +211,6 @@ module main import soc_pkg::*;
     end
   end
   
-  //logic [31:0] mux_demux_obi_req_a_addr;
-  //assign mux_demux_obi_req_a_addr = master_demux_obi_req.a.addr;
 
     obi_demux #(
       .ObiCfg      ( SbrObiCfg       ),

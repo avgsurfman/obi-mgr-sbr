@@ -46,14 +46,23 @@ rst_ni = 1'b0;
 rst_ni = 1'b1;
 #5;
 
-// Try to read something from foo or bar.
+// Try to read something from foo.
 req_i = 1;
 addr_i = 32'h0000_0003;
-#20
+#30
+assert(rsp_o == 32'h0000_3333) else $error("Failed to read! %h", rsp_o);
+req_i = 1;
+we_i = 1;
+addr_i = 32'h0000_0001;
+wdata_i = 32'h1337_C0DE;
+// wait 3 clock cycles for a write
+#30;
+assert(dut.foo.mem[1] == 32'h1337_C0DE) else $error("Failed to write LEETCODE to 0x1, got: %h", dut.foo.mem[1]);
 
-//assert(rsp_o == 32'h0000_3333) else $error("Mismatch! %h", rsp_o);
-#20;
+
 $display("Simulation finished.");
+$display("+------------------+");
+$display("All tests passed successfully.");
 $stop;
 end
 
