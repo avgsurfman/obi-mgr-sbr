@@ -96,58 +96,6 @@ module main import soc_pkg::*;
     assign bar_obi_req = all_periph_obi_req[PeriphBar];
     assign all_periph_obi_rsp[PeriphBar] = bar_obi_rsp;
 
-    /*// ------------------
-    // Interface bindings
-    // ------------------
-    ///// SIGNAL DECLARATION
-    //// MASTER
-    /// A Channel signals
-    logic obi_req_o;
-    logic obi_gnt_i;
-    logic [ADDR_WIDTH-1:0] obi_addr_o;
-    logic obi_we_o;
-    logic [DATA_WIDTH/8-1:0] obi_be_o;
-    logic [DATA_WIDTH-1:0] obi_wdata_o; 
-     
-    /// R Channel signals 
-    logic obi_rvalid_i;
-    logic obi_rready_o;  
-    logic [DATA_WIDTH-1:0] obi_rdata_i;
-    logic obi_err_i;
-
-    ///// SIGNAL ASSIGNMENTS
-    ////  SLAVE
-    ///   A Channel signals
-    logic obi_req_i;
-    logic obi_gnt_o;
-    logic [ADDR_WIDTH-1:0] obi_addr_i;
-    logic obi_we_i;
-    logic [DATA_WIDTH/8-1:0] obi_be_i;
-    logic [DATA_WIDTH-1:0] obi_wdata_i; 
-     
-    /// R Channel signals 
-    logic obi_rvalid_o;
-    logic obi_rready_i;  
-    logic [DATA_WIDTH-1:0] obi_rdata_o;
-    logic obi_err_o;
-
-
-    ///// signal assignments
-    ////  master
-    /// A channel signals
-    //assign master_demux_obi_req.req = obi_req_o;
-    //assign obi_gnt_i = master_demux_obi_rsp.gnt;
-    //assign obi_addr_o = master_demux_obi_req.a.addr;
-    //assign obi_we_o = master_demux_obi_req.a.we;
-    //assign obi_be_o = master_demux_obi_req.a.be;
-    //assign obi_wdata_o = master_demux_obi_req.a.wdata; 
-     
-    /// R channel signals 
-    //assign obi_rvalid_i = master_demux_obi_rsp.rvalid;
-    //assign obi_rready_o = master_demux_obi_req.rready;  
-    //assign obi_rdata_i = master_demux_obi_rsp.r.rdata;
-    //assign obi_err_i = master_demux_obi_rsp.r.err;
-    */
 
     //// Master device
     obi_master #(
@@ -164,12 +112,12 @@ module main import soc_pkg::*;
         .clk_i (clk_i),
         .reset_ni (rst_ni),
         //// Controler signals
-        //// TODO: FILL THIS OUT
         .req_i (req_i),
         .we_i (we_i),
         .addr_i (addr_i),
         .rsp_o (rsp_o),
         .wdata_i (wdata_i),
+
         //// A-channel signals
         .obi_req_o (master_demux_obi_req.req),
         .obi_gnt_i (master_demux_obi_rsp.gnt),

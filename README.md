@@ -12,6 +12,9 @@ Contents:
 Both device files act as templates, as most of unnecessary signals and parameters have been commented out, but can be implemented as see fit.
 Both devices implement limited error handling (e.g bad writes).
 
+## Adding a Slave Device 
+
+
 ## State-transition Diagram
 ![A state transition diagram poorly drawn by hand and digitized. Honestly, just use a screen reader for those files instead.](transition_graph.jpg)
 
