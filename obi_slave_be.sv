@@ -1,5 +1,7 @@
-// OBI Slave v1
-// Fetches or writes data to its SRAM.
+// OBI Byte-enabled Slave v2
+// Fetches or writes data to its SRAM. 
+// This slave has byte-aligned memory and allows to set
+// byteenable (obi_be_i) to fetch half-words or single bytes.
 // CC Franciszek Moszczuk and IHP Microelectronics GmbH.
 // Licensed under Apache 2.0 License.
 //    ⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣶⣶⣶⣿⡆
@@ -10,7 +12,7 @@
 //    ⣿⡏⣾⡏⢪⣾⡇⡿⠿⢟⣫⠵⣛⡅⠀
 //    ⣿⣷⣙⠷⢿⣟⣓⣯⢨⣷⣾⣿⣿⡇⠀
 //    ⣿⣿⣿⣿⣿⣿⣿⣟⣼⣿⣿⣿⣿⡇⠀
-module obi_slave#(
+module obi_slave_be#(
    /// Adress Width Parameter. Can be either 32-bit or 64-bit.
    parameter int unsigned ADDR_WIDTH = 32, 
    /// Data Width Parameter. Can be either 32-bit or 64-bit.
@@ -41,49 +43,58 @@ module obi_slave#(
    input logic [DATA_WIDTH/8-1:0] obi_be_i,
    input logic [DATA_WIDTH-1:0] obi_wdata_i,
    
-   /* stubs - optional signals
-   Input logic [AUSER_WIDTH-1:0] obi_auser_i,
-   Input logic [WUSER_WIDTH-1:0] obi_wuser_i,
-   Input logic [ID_WIDTH-1:0] obi_aid_i,
-   Input logic [5:0] obi_atop_i,
-   Input logic [1:0] obi_memtype_i,
-   Input logic [2:0] obi_prot_i,
-   // Odd Parity signals
-   input logic obi_reqpar_i,
-   output logic obi_gntpar_o,
-   input logic [ACHK_WIDTH-1:0] achk_i,
-   */
+   /// stubs - optional signals
+   //Input logic [AUSER_WIDTH-1:0] obi_auser_i,
+   //Input logic [WUSER_WIDTH-1:0] obi_wuser_i,
+   //Input logic [ID_WIDTH-1:0] obi_aid_i,
+   //Input logic [5:0] obi_atop_i,
+   //Input logic [1:0] obi_memtype_i,
+   //Input logic [2:0] obi_prot_i,
+   /// Odd Parity signals
+   //input logic obi_reqpar_i,
+   //output logic obi_gntpar_o,
+   //input logic [ACHK_WIDTH-1:0] achk_i,
    
    /// R Channel signals 
    output logic obi_rvalid_o,
    input logic obi_rready_i,  
    output logic [DATA_WIDTH-1:0] obi_rdata_o,
    output logic obi_err_o
-   /* stubs - optional signals
-   output logic [RUSER_WIDTH-1:0] obi_ruser_i,
-   output logic [ID_WIDTH-1:0] obi_rid_i,
-   output logic obi_exokay_i,
+   /// stubs - optional signals
+   //output logic [RUSER_WIDTH-1:0] obi_ruser_i,
+   //output logic [ID_WIDTH-1:0] obi_rid_i,
+   //output logic obi_exokay_i,
    // Odd Parity signals
-   input logic obi_rvalidpar_i,
-   input logic obi_rreadypar_i,
-   output logic [RCHK_WIDTH-1:0] obi_rchk_i */
+   //input logic obi_rvalidpar_i,
+   //input logic obi_rreadypar_i,
+   //output logic [RCHK_WIDTH-1:0] obi_rchk_i
 
 );
 
-localparam MEM_WIDTH=4;
+localparam MEM_WIDTH=6; 
 
 /// Necessary regs and wires
 
-logic [DATA_WIDTH-1:0] addr_q;
+logic [ADDR_WIDTH-1:0] addr_q;
 logic mem_we;
 logic out_of_range;
 
 /// Memory
-
-logic [DATA_WIDTH-1:0] mem [2**MEM_WIDTH-1:0];
+// 64 words (32-bit), the following should resolve
+// to your technology of choice (e.g. RM_IHPSG13_2P_64x32_c2)
+logic [ADDR_WIDTH-1:0] mem [2**MEM_WIDTH-1:0];
 
 always_ff@(posedge clk_i) begin
-    if(mem_we) mem[obi_addr_i] <= obi_wdata_i;
+    // Case statement based on be
+    if(mem_we) begin
+        mem[obi_addr_i[ADDR_WIDTH:2]] <= obi_wdata_i;
+    /*case(obi_be_i)
+    4'b1111: mem[obi_addr_i[7:2]] <= obi_wdata_i;
+    4'b1110: mem[obi_addr_i[7:2] [{obi_addr_i[1]}]
+    4'b1100: mem[]
+    4'b0110
+    4'b0011*/
+    end
 end
 
 /// Chip-enable registers
@@ -139,12 +150,7 @@ always_comb begin
            end
            else nextstate = IDLE;
        READ: begin
-           // Adress out of range
-           if (out_of_range) begin
-               obi_err_o = 1'b1;
-               obi_rdata_o = 'hBADCAB1E; // rip deadbeef                
-           end
-           else obi_rdata_o = mem[addr_q];
+           obi_rdata_o = mem[obi_addr_i[ADDR_WIDTH-1:0]];
            if (obi_rready_i) nextstate = IDLE;
            else nextstate = READ;
            end
@@ -159,5 +165,4 @@ always_comb begin
 end
     assign obi_gnt_o = (state == IDLE);
     assign obi_rvalid_o = (state != IDLE); 
-    assign out_of_range = |addr_q[ADDR_WIDTH-1:MEM_WIDTH];
-endmodule;
+endmodule
