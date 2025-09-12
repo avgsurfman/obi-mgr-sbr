@@ -82,12 +82,17 @@ logic out_of_range;
 /// Memory
 // 64 words (32-bit), the following should resolve
 // to your technology of choice (e.g. RM_IHPSG13_2P_64x32_c2)
-logic [ADDR_WIDTH-1:0] mem [2**MEM_WIDTH-1:0];
+//logic [ADDR_WIDTH-1:0] mem [2**MEM_WIDTH-1:0];
+//multipacked array go
+logic [1:0][1:0][7:0] mem[2**MEM_WIDTH-1:0];
 
-always_ff@(posedge clk_i) begin : 
-    if(mem_we) mem[obi_addr_i[ADDR_WIDTH:2]] <= obi_wdata_i;
+always_ff@(posedge clk_i) begin 
+    // Unfortunately implicit bit truncation will crash your simulation,
+    // hence the 7 constant. Beware.
+ 
+    if(mem_we) mem[obi_addr_i[7:2]] <= obi_wdata_i;
     /*case(obi_be_i)
-    4'b1111: mem[obi_addr_i[7:2]] <= obi_wdata_i; // lw
+    4'b1111: mem[obi_addr_i[ADDR_WIDTH:2]] <= obi_wdata_i; // lw
     4'b1110: mem[obi_addr_i[7:2] [{obi_addr_i[1]}]
     4'b0111: mem[obi_addr_i[7:2] ]
     4'b1100: mem[obi_addr_i[ADDR_WIDTH:2]] [a[1]] //lh

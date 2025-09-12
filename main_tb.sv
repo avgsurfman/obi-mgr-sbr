@@ -27,8 +27,8 @@ end
 //initalize ram
 //Preload RAM
 initial begin
-    $readmemh("mem.hex", dut.foo.mem);
-    $readmemh("mem.hex", dut.bar.mem);
+    $readmemh("./obi_slave/mem.hex", dut.foo.mem);
+    $readmemh("./obi_slave/mem.hex", dut.bar.mem);
 end
 
 initial begin    

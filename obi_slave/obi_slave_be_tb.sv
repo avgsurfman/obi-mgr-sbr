@@ -124,7 +124,7 @@ initial begin
     #20
     */    
     $display("Test 3: Write good data to 0x000000C data.");
-    obi_addr_i = 'h0000_000C;
+    obi_addr_i = 'h0000_0008;
     obi_wdata_i = 'h1337_C0DE;
     obi_we_i = 1'b1;
     obi_req_i = 1'b1;
@@ -132,7 +132,7 @@ initial begin
     #30
     assert(dut.mem[2] == 'h1337_C0DE) else begin
         $error("Failed to write! Actual value: %h", dut.mem[2]);
-        $display("memdump %h %h %h %h %h", dut.mem[0], dut.mem[1], dut.mem[2], dut.mem[3]);
+        $display("memdump %h %h %h %h %h", dut.mem[0], dut.mem[1], dut.mem[2], dut.mem[3], dut.mem[4]);
         $stop;
     end
     $display("All tests passed successfully");
