@@ -2,3 +2,5 @@
 *.vcd
 runs/
 obj_dir/*
+
+*/obj_dir

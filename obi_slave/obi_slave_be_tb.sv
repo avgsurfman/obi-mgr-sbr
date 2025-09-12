@@ -130,10 +130,24 @@ initial begin
     obi_we_i = 1'b1;
     obi_req_i = 1'b1;
     // two clock cycles
-    #30
+    #20
     assert(dut.mem[2] == 'h1337_C0DE) else begin
         $error("Failed to write! Actual value: %h", dut.mem[2]);
         $display("memdump %h %h %h %h %h", dut.mem[0], dut.mem[1], dut.mem[2], dut.mem[3], dut.mem[4]);
+        $stop;
+    end
+    
+    $display("Test 4: Write a byte to 0x000000F.");
+    obi_be_i = 4'b1000;
+    obi_addr_i = 'h0000_000F;
+    obi_wdata_i = 'h1337_C0DE;
+    obi_we_i = 1'b1;
+    obi_req_i = 1'b1;
+    // two clock cycles
+    #30
+    $display("memdump %h %h %h %h %h", dut.mem[0], dut.mem[1], dut.mem[2], dut.mem[3], dut.mem[4]);
+    assert(dut.mem[2] == 'h1337_C0DE) else begin
+        $error("Failed to write! Actual value: %h", dut.mem[2]);
         $stop;
     end
     $display("All tests passed successfully");
