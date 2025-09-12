@@ -104,9 +104,10 @@ initial begin
         $error("Failed to read! Actual value: %h", obi_rdata_o);
         $stop;
     end
-    /*
-    $display("Test 2: Bad out-of-range read @ 0x0000_0100.");
+    
+    //$display("Test 2: Bad out-of-range read @ 0x0000_0100.");
     #5; //clk edge
+    /*
     obi_req_i = 1'b1;
     obi_addr_i = 'hFFFF_FFFF;
     #15;
@@ -114,15 +115,24 @@ initial begin
         $error("Failed to read BADCAB1E! Actual value: %h, obi_err_o == ", obi_rdata_o, obi_err_o);
         $stop;
     end
-    */    
-    $display("Test 3: Write data to 0x0000002 data.");
+    $display("Test 3: Write data to 0x0000002 data. [FAIL]");
     obi_addr_i = 'h0000_0002;
     obi_wdata_i = 'h1337_C0DE;
     obi_we_i = 1'b1;
+    obi_req_i = 1'b1;
     // two clock cycles
     #20
+    */    
+    $display("Test 3: Write good data to 0x000000C data.");
+    obi_addr_i = 'h0000_000C;
+    obi_wdata_i = 'h1337_C0DE;
+    obi_we_i = 1'b1;
+    obi_req_i = 1'b1;
+    // two clock cycles
+    #30
     assert(dut.mem[2] == 'h1337_C0DE) else begin
         $error("Failed to write! Actual value: %h", dut.mem[2]);
+        $display("memdump %h %h %h %h %h", dut.mem[0], dut.mem[1], dut.mem[2], dut.mem[3]);
         $stop;
     end
     $display("All tests passed successfully");

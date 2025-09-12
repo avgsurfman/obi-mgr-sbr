@@ -84,17 +84,20 @@ logic out_of_range;
 // to your technology of choice (e.g. RM_IHPSG13_2P_64x32_c2)
 logic [ADDR_WIDTH-1:0] mem [2**MEM_WIDTH-1:0];
 
-always_ff@(posedge clk_i) begin
-    // Case statement based on be
-    if(mem_we) begin
-        mem[obi_addr_i[ADDR_WIDTH:2]] <= obi_wdata_i;
+always_ff@(posedge clk_i) begin : 
+    if(mem_we) mem[obi_addr_i[ADDR_WIDTH:2]] <= obi_wdata_i;
     /*case(obi_be_i)
-    4'b1111: mem[obi_addr_i[7:2]] <= obi_wdata_i;
+    4'b1111: mem[obi_addr_i[7:2]] <= obi_wdata_i; // lw
     4'b1110: mem[obi_addr_i[7:2] [{obi_addr_i[1]}]
-    4'b1100: mem[]
-    4'b0110
-    4'b0011*/
-    end
+    4'b0111: mem[obi_addr_i[7:2] ]
+    4'b1100: mem[obi_addr_i[ADDR_WIDTH:2]] [a[1]] //lh
+    4'b0110: mem[]
+    4'b0011:
+    4:b1000
+    4:b0100
+    4:b0010
+    4:00001
+    4'b0000*/
 end
 
 /// Chip-enable registers
