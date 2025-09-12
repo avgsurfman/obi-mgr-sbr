@@ -124,6 +124,7 @@ initial begin
     #20
     */    
     $display("Test 3: Write good data to 0x000000C data.");
+    obi_be_i = 4'b1111;
     obi_addr_i = 'h0000_0008;
     obi_wdata_i = 'h1337_C0DE;
     obi_we_i = 1'b1;

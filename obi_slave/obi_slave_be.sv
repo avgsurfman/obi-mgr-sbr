@@ -83,26 +83,31 @@ logic out_of_range;
 // 64 words (32-bit), the following should resolve
 // to your technology of choice (e.g. RM_IHPSG13_2P_64x32_c2)
 //logic [ADDR_WIDTH-1:0] mem [2**MEM_WIDTH-1:0];
-//multipacked array go
+
+//    [shw][sby][dat]    [   word_count   ]
 logic [1:0][1:0][7:0] mem[2**MEM_WIDTH-1:0];
 
 always_ff@(posedge clk_i) begin 
     // Unfortunately implicit bit truncation will crash your simulation,
     // hence the 7 constant. Beware.
- 
-    if(mem_we) mem[obi_addr_i[7:2]] <= obi_wdata_i;
-    /*case(obi_be_i)
-    4'b1111: mem[obi_addr_i[ADDR_WIDTH:2]] <= obi_wdata_i; // lw
-    4'b1110: mem[obi_addr_i[7:2] [{obi_addr_i[1]}]
-    4'b0111: mem[obi_addr_i[7:2] ]
-    4'b1100: mem[obi_addr_i[ADDR_WIDTH:2]] [a[1]] //lh
-    4'b0110: mem[]
-    4'b0011:
-    4:b1000
-    4:b0100
-    4:b0010
-    4:00001
-    4'b0000*/
+    obi_err_o = 0;
+    if(mem_we) begin 
+    //mem[obi_addr_i[7:2]] <= obi_wdata_i;
+    case(obi_be_i)
+    // sw
+    4'b1111: mem[obi_addr_i[7:2]] <= obi_wdata_i; // sw
+    // sh zone
+    4'b1100: mem[obi_addr_i[7:2]][obi_addr_i[1]] <= obi_wdata_i[31:16]; //sh
+    4'b0011: mem[obi_addr_i[7:2]][obi_addr_i[0]] <= obi_wdata_i[15:0]; 
+    // sb zone
+    4'b1000: mem[obi_addr_i[7:2]][obi_addr_i[1]][obi_addr_i[1]] <= obi_wdata_i[31:24];
+    4'b0100: mem[obi_addr_i[7:2]][obi_addr_i[1]][obi_addr_i[0]] <= obi_wdata_i[23:16];
+    4'b0010: mem[obi_addr_i[7:2]][obi_addr_i[0]][obi_addr_i[1]] <= obi_wdata_i[15:8];
+    4'b0001: mem[obi_addr_i[7:2]][obi_addr_i[0]][obi_addr_i[0]] <= obi_wdata_i[7:0];
+    default:
+        obi_err_o = 1;
+    endcase
+    end
 end
 
 /// Chip-enable registers
@@ -141,7 +146,6 @@ end
 
 always_comb begin
     obi_rdata_o = 'b0;
-    obi_err_o = 1'b0;
     mem_we = 'b0;
     case(state)
         RESET:
