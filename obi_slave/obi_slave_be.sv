@@ -1,7 +1,8 @@
+// obi_slave_be
 // OBI Byte-enabled Slave v2
 // Fetches or writes data to its SRAM. 
-// This slave has byte-aligned memory and allows to set
-// byteenable (obi_be_i) to fetch half-words or single bytes.
+// This slave has word-aligned memory. Supports single byte writes.
+// Set byteenable (obi_be_i) to load/store half-words or single bytes.
 // CC Franciszek Moszczuk and IHP Microelectronics GmbH.
 // Licensed under Apache 2.0 License.
 //    ⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣶⣶⣶⣿⡆
@@ -28,9 +29,6 @@ module obi_slave_be#(
 ) (//// Global signals.
    input logic clk_i,
    input logic reset_ni,
-
-   //// Controller signals
-   //input logic busy_i;
 
    //// Channel signals
    /// A channel
@@ -87,9 +85,9 @@ logic out_of_range;
 //    [shw][sby][dat]    [   word_count   ]
 logic [1:0][1:0][7:0] mem[2**MEM_WIDTH-1:0];
 
-always_ff@(posedge clk_i) begin 
+always_ff@(posedge clk_i) begin : mem_write
     // Unfortunately implicit bit truncation will crash your simulation,
-    // hence the 7 constant. Beware.
+    // hence the 7 magic constant. Beware.
     obi_err_o = 0;
     if(mem_we) begin 
     //mem[obi_addr_i[7:2]] <= obi_wdata_i;
@@ -109,6 +107,7 @@ always_ff@(posedge clk_i) begin
     endcase
     end
 end
+
 
 /// Chip-enable registers
 
@@ -153,11 +152,11 @@ always_comb begin
         IDLE:
            if(!obi_we_i && obi_req_i) begin
                 nextstate = READ;
-                //Capture incoming data on next clk edge
+                //Capture incoming data on the next clk edge
            end
            else if(obi_we_i && obi_req_i) begin
                 nextstate = WRITE;
-                //Capture incoming data on next clk edge  
+                //Capture incoming data on the next clk edge  
                 mem_we = 1'b1; 
            end
            else nextstate = IDLE;
@@ -175,6 +174,7 @@ always_comb begin
        end
     endcase
 end
+
     assign obi_gnt_o = (state == IDLE);
     assign obi_rvalid_o = (state != IDLE); 
 endmodule

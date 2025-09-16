@@ -1,4 +1,5 @@
-// OBI Master v1 (v2 in progress)
+// obi_master
+// OBI Master v1.1
 // Performs a single read/write to a subordinate/slave.
 // CC Franciszek Moszczuk and IHP Microelectronics GmbH. 
 // Licensed under Apache 2.0 License.

@@ -1,5 +1,6 @@
-// OBI Slave v1
-// Fetches or writes data to its SRAM.
+// obi_slave
+// OBI Slave v1.1
+// Fetches or writes data to SRAM.
 // CC Franciszek Moszczuk and IHP Microelectronics GmbH.
 // Licensed under Apache 2.0 License.
 //    ⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣶⣶⣶⣿⡆
