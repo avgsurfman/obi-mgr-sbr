@@ -1,5 +1,5 @@
 // obi_slave_be
-// OBI Byte-enabled Slave v2
+// OBI Byte-enabled Slave v2.5
 // Fetches or writes data to its SRAM. 
 // This slave has word-aligned memory. Supports single byte writes.
 // Set byteenable (obi_be_i) to load/store half-words or single bytes.
@@ -13,6 +13,9 @@
 //    ⣿⡏⣾⡏⢪⣾⡇⡿⠿⢟⣫⠵⣛⡅⠀
 //    ⣿⣷⣙⠷⢿⣟⣓⣯⢨⣷⣾⣿⣿⡇⠀
 //    ⣿⣿⣿⣿⣿⣿⣿⣟⣼⣿⣿⣿⣿⡇⠀
+
+`include "mem_waligned.sv"
+
 module obi_slave_be#(
    /// Adress Width Parameter. Can be either 32-bit or 64-bit.
    parameter int unsigned ADDR_WIDTH = 32, 
@@ -74,39 +77,27 @@ localparam MEM_WIDTH=6;
 /// Necessary regs and wires
 
 logic [ADDR_WIDTH-1:0] addr_q;
+logic [DATA_WIDTH-1:0] rdata_q;
+logic [DATA_WIDTH-1:0] wdata_q;
+logic [DATA_WIDTH/8-1:0] be_q;
 logic mem_we;
-logic out_of_range;
 
 /// Memory
-// 64 words (32-bit), the following should resolve
-// to your technology of choice (e.g. RM_IHPSG13_2P_64x32_c2)
-//logic [ADDR_WIDTH-1:0] mem [2**MEM_WIDTH-1:0];
+// 64 words (32-bit), see mem_waligned.sv for details
 
-//    [shw][sby][dat]    [   word_count   ]
-logic [1:0][1:0][7:0] mem[2**MEM_WIDTH-1:0];
+mem_waligned_32 #(
+    .MEM_WIDTH (6)
+) mem ( 
+    .clk (clk_i), 
+    .reset (reset_ni), 
+    .we(mem_we),   // FSM-signal
+    .be(obi_be_i), // all 3 sampled on clk' 
+    .a (addr_q),   
+    .wd(wdata_q),
+    .rd(rdata_q),
+    .err(obi_err_o) 
+); 
 
-always_ff@(posedge clk_i) begin : mem_write
-    // Unfortunately implicit bit truncation will crash your simulation,
-    // hence the 7 magic constant. Beware.
-    obi_err_o = 0;
-    if(mem_we) begin 
-    //mem[obi_addr_i[7:2]] <= obi_wdata_i;
-    case(obi_be_i)
-    // sw
-    4'b1111: mem[obi_addr_i[7:2]] <= obi_wdata_i; // sw
-    // sh zone
-    4'b1100: mem[obi_addr_i[7:2]][obi_addr_i[1]] <= obi_wdata_i[31:16]; //sh
-    4'b0011: mem[obi_addr_i[7:2]][obi_addr_i[0]] <= obi_wdata_i[15:0]; 
-    // sb zone
-    4'b1000: mem[obi_addr_i[7:2]][obi_addr_i[1]][obi_addr_i[1]] <= obi_wdata_i[31:24];
-    4'b0100: mem[obi_addr_i[7:2]][obi_addr_i[1]][obi_addr_i[0]] <= obi_wdata_i[23:16];
-    4'b0010: mem[obi_addr_i[7:2]][obi_addr_i[0]][obi_addr_i[1]] <= obi_wdata_i[15:8];
-    4'b0001: mem[obi_addr_i[7:2]][obi_addr_i[0]][obi_addr_i[0]] <= obi_wdata_i[7:0];
-    default:
-        obi_err_o = 1;
-    endcase
-    end
-end
 
 
 /// Chip-enable registers
@@ -120,7 +111,27 @@ always_ff@(posedge clk_i or negedge reset_ni) begin
     end
 end
 
+always_ff@(posedge clk_i or negedge reset_ni) begin
+    if(!reset_ni) begin
+        wdata_q <= '0;
+    end
+    else if(obi_req_i) begin
+        wdata_q <= obi_wdata_i; 
+    end
+end
+
+
+always_ff@(posedge clk_i or negedge reset_ni) begin
+    if(!reset_ni) begin
+        be_q <= '0;
+    end
+    else if(obi_req_i) begin
+        be_q <= obi_be_i; 
+    end
+end
+
 /// Tied off signals (R-26)
+
 
 
 /// State definitions
@@ -134,6 +145,8 @@ typedef enum logic [1:0] {
 
 statetype state, nextstate;
 
+/// Three block Moore FSM
+
 always_ff@(posedge clk_i or negedge reset_ni) begin
     if(!reset_ni) begin
         state <= RESET;
@@ -144,7 +157,7 @@ always_ff@(posedge clk_i or negedge reset_ni) begin
 end
 
 always_comb begin
-    obi_rdata_o = 'b0;
+    obi_rdata_o = 0;
     mem_we = 'b0;
     case(state)
         RESET:
@@ -161,7 +174,7 @@ always_comb begin
            end
            else nextstate = IDLE;
        READ: begin
-           obi_rdata_o = mem[obi_addr_i[ADDR_WIDTH-1:0]];
+           obi_rdata_o = rdata_q;
            if (obi_rready_i) nextstate = IDLE;
            else nextstate = READ;
            end

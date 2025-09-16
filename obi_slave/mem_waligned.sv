@@ -12,7 +12,7 @@
 //    ⣿⣷⣙⠷⢿⣟⣓⣯⢨⣷⣾⣿⣿⡇⠀
 //    ⣿⣿⣿⣿⣿⣿⣿⣟⣼⣿⣿⣿⣿⡇⠀
 
-module mem_aligned_32#(
+module mem_waligned_32#(
     parameter MEM_WIDTH = 6
 ) ( 
     input logic clk, reset, we,

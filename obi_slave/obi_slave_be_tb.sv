@@ -63,7 +63,7 @@ obi_slave_be #(
 
 //Preload RAM
 initial begin
-    $readmemh("mem.hex", dut.mem);
+    $readmemh("mem.hex", dut.mem.mem);
 end
 
 
@@ -79,7 +79,6 @@ initial begin
     obi_addr_i = 'b0; 
     obi_wdata_i = 'b0;
     
-    
     // @posedge is not supported by iverilog
     // (systemverilog.dev) 
     #5; //posedge
@@ -92,10 +91,11 @@ initial begin
         $error("Failed to reset! Actual value: %h", dut.state);
         $stop;
     end
-    $display("Test 1: Read DA7A5EAD @ 0x0000_0004.");
+    $display("Test 1: Read DA7A5EAD @ 0x0000_0010.");
     //set req high 
     obi_req_i = 1'b1; 
-    obi_addr_i = 'h0000_0004;
+    obi_be_i = 4'b1111;
+    obi_addr_i = 'h0000_0010;
     obi_rready_i = 1'b1;
     #10;
     obi_req_i = 1'b0;
@@ -105,24 +105,21 @@ initial begin
         $stop;
     end
     
-    //$display("Test 2: Bad out-of-range read @ 0x0000_0100.");
     #5; //clk edge
     /*
+    $display("Test 2: Bad out-of-range read @ 0x0000_0100.");
+    
     obi_req_i = 1'b1;
     obi_addr_i = 'hFFFF_FFFF;
     #15;
-    assert(obi_rdata_o == 'hBADCAB1E && obi_err_o == 1) else begin
-        $error("Failed to read BADCAB1E! Actual value: %h, obi_err_o == ", obi_rdata_o, obi_err_o);
+    $display("memdump %h %h %h %h %h", dut.mem.mem[0], dut.mem.mem[1], dut.mem.mem[2], dut.mem.mem[3], dut.mem.mem[4]);
+    assert(obi_rdata_o == 'hDEADBEEF && obi_err_o == 1) else begin
+        $error("Failed to read DEADBEEF! Actual value: %h, obi_err_o == ", obi_rdata_o, obi_err_o);
         $stop;
     end
-    $display("Test 3: Write data to 0x0000002 data. [FAIL]");
-    obi_addr_i = 'h0000_0002;
-    obi_wdata_i = 'h1337_C0DE;
-    obi_we_i = 1'b1;
-    obi_req_i = 1'b1;
     // two clock cycles
     #20
-    */    
+    */ 
     $display("Test 3: Write good data to 0x000000C data.");
     obi_be_i = 4'b1111;
     obi_addr_i = 'h0000_0008;
@@ -131,9 +128,9 @@ initial begin
     obi_req_i = 1'b1;
     // two clock cycles
     #20
-    $display("memdump %h %h %h %h %h", dut.mem[0], dut.mem[1], dut.mem[2], dut.mem[3], dut.mem[4]);
-    assert(dut.mem[2] == 'h1337_C0DE) else begin
-        $error("Failed to write! Actual value: %h", dut.mem[2]);
+    $display("memdump %h %h %h %h %h", dut.mem.mem[0], dut.mem.mem[1], dut.mem.mem[2], dut.mem.mem[3], dut.mem.mem[4]);
+    assert(dut.mem.mem[2] == 'h1337_C0DE) else begin
+        $error("Failed to write! Actual value: %h", dut.mem.mem[2]);
         $stop;
     end
     
@@ -145,9 +142,9 @@ initial begin
     obi_req_i = 1'b1;
     // two clock cycles
     #30
-    $display("memdump %h %h %h %h %h", dut.mem[0], dut.mem[1], dut.mem[2], dut.mem[3], dut.mem[4]);
-    assert(dut.mem[3] == 'h1300_3333) else begin
-        $error("Failed to write! Actual value: %h", dut.mem[3]);
+    $display("memdump %h %h %h %h %h", dut.mem.mem[0], dut.mem.mem[1], dut.mem.mem[2], dut.mem.mem[3], dut.mem.mem[4]);
+    assert(dut.mem.mem[3] == 'h1300_3333) else begin
+        $error("Failed to write! Actual value: %h", dut.mem.mem[3]);
         $stop;
     end
     obi_be_i = 4'b1100;
@@ -157,7 +154,7 @@ initial begin
     #30
     // assert half read (lh)
     $display("Test 5: Read two bytes from 0x000000A.");
-    $display("memdump %h %h %h %h %h", dut.mem[0], dut.mem[1], dut.mem[2], dut.mem[3], dut.mem[4]);
+    $display("memdump %h %h %h %h %h", dut.mem.mem[0], dut.mem.mem[1], dut.mem.mem[2], dut.mem.mem[3], dut.mem.mem[4]);
     assert(obi_rdata_o == 'h1337_0000) else begin
         $error("Failed to read! Actual value: %h", obi_rdata_o);
         $stop;
