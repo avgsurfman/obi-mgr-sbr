@@ -20,16 +20,90 @@ The byte enabled version uses word-aligned (RISC-V 4-word rsp) byte enable for w
 Step-by-step:
 
 1. Increment the NumPeriphs Macro in the soc_pkg.sv file to match the # of peripherals in your design.
-2. Adjust the Obconfig. Signals/wires are enabled by per paremeter basis. For example, you can choose to
-not use the rready signal. 
-3. Instantiate OBI buses for your devices. Tie off signals if desired.
-4. Adjust the adress map in the soc_pkg file. 
+
+```
+    localparam bit [31:0] FooAddrOffset           = 32'h0000_0000;
+    localparam bit [31:0] FooAddrRange            = 32'h0000_000F; 
+
+    localparam bit [31:0] BarAddrOffset            = 32'h2000_0000;
+    localparam bit [31:0] BarAddrRange             = 32'h0000_0008; // 256 * 32 bit words
+
+    localparam int unsigned NumPeriphRules  = 2;
+    localparam int unsigned NumPeriphs      = NumPeriphRules + 1; // additional OBI error
+
+
+```
+2. Adjust the address ranges of your peripherals. Without this
+all of your device signals will be routed to the obi error device, instead.
+3. Adjust the Obconfig. Signals/wires are enabled by per paremeter basis. For example, 
+you can choose not to use the rready signal. 
+```
+    localparam obi_pkg::obi_cfg_t SbrObiCfg = '{
+          // rready is used
+          UseRReady:      1,
+          CombGnt:     1'b0,
+          AddrWidth:     32,
+          DataWidth:     32,
+          // One manager
+          IdWidth:        1,
+          Integrity:   1'b0,
+          BeFull:      1'b1,
+          OptionalCfg:  '0
+      };
+```
+
+Optionally, you can create your own OBI struct. All that OBI mux/demux needs is a struct with matching signal names.
+3. Instantiate (2) OBI buses for your devices: 
+one for the A-channel, and the other for the R-channel. 
+Tie off signals if desired.
+
+```
+    // Error bus                                                        sbr_obi_req_t error_obi_req;                                        sbr_obi_rsp_t error_obi_rsp;                                                                                                            // Slave 1 bus                                                      sbr_obi_req_t foo_obi_req;                                          sbr_obi_rsp_t foo_obi_rsp;                                                                                                              // Slave 2 bus                                                      sbr_obi_req_t bar_obi_req;                                          sbr_obi_rsp_t bar_obi_rsp;
+
+```
+
+Remember to add appropriate entries for the adress map in main.sv as well.
+
+```
+    // ---------------
+    // Periph Addr Map
+    // ---------------
+
+    assign error_obi_req = all_periph_obi_req[PeriphError];
+    assign all_periph_obi_rsp[PeriphError] = error_obi_rsp;
+
+    assign foo_obi_req = all_periph_obi_req[PeriphFoo];
+    assign all_periph_obi_rsp[PeriphFoo] = foo_obi_rsp;
+    
+    assign bar_obi_req = all_periph_obi_req[PeriphBar];
+    assign all_periph_obi_rsp[PeriphBar] = bar_obi_rsp;
+
+```
+
+4. Instantiate your device. Map the A/R channels to their respective signals in your IP.
+
+```
+       //// A-channel signals
+       .obi_req_i (bar_obi_req.req),
+       .obi_gnt_o (bar_obi_rsp.gnt),
+       .obi_addr_i (bar_obi_req.a.addr),
+       .obi_we_i (bar_obi_req.a.we),
+       .obi_be_i (bar_obi_req.a.be),
+       .obi_wdata_i (bar_obi_req.a.wdata),
+
+        //// R-Channel signals
+       .obi_rvalid_o (bar_obi_rsp.rvalid),
+       .obi_rready_i (bar_obi_req.rready),
+       .obi_rdata_o (bar_obi_rsp.r.rdata),
+       .obi_err_o (bar_obi_rsp.r.err)
+```
 
 
 ## Adding a (second) Master device
 ??? TODO
 - Instantiate the Multiplexer
 - Change the master device macro
+- see the Greyhound project for proper reference
 
 
 ## State-transition Diagram

@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: © 2025 Leo Moser <leo.moser@pm.me>
 // SPDX-License-Identifier: Apache-2.0
 
-`include "obi_slave.sv"
-`include "obi_master.sv"
+`include "./obi_slave/obi_slave.sv"
+`include "./obi_master/obi_master.sv"
 `include "soc_pkg.sv"
 `include "./ip/common_cells/src/cf_math_pkg.sv"
 `include "./ip/common_cells/src/delta_counter.sv"
