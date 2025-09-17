@@ -53,7 +53,7 @@ you can choose not to use the rready signal.
 ```
 
 Optionally, you can create your own OBI struct. All that OBI mux/demux needs is a struct with matching signal names.
-3. Instantiate (2) OBI buses for your devices: 
+4. Instantiate (2) OBI buses for your devices: 
 one for the A-channel, and the other for the R-channel. 
 Tie off signals if desired.
 
@@ -80,7 +80,7 @@ Remember to add appropriate entries for the adress map in main.sv as well.
 
 ```
 
-4. Instantiate your device. Map the A/R channels to their respective signals in your IP.
+5. Instantiate your device. Map the A/R channels to their respective signals in your IP.
 
 ```
        //// A-channel signals
@@ -97,7 +97,8 @@ Remember to add appropriate entries for the adress map in main.sv as well.
        .obi_rdata_o (bar_obi_rsp.r.rdata),
        .obi_err_o (bar_obi_rsp.r.err)
 ```
-
+6. (Optional) There are ready-to-use TBs for OBI Interfaces,
+if your synthesis tool supports that.
 
 ## Adding a (second) Master device
 ??? TODO
