@@ -13,7 +13,7 @@ Contents:
 Both device files act as templates. They work, but extra (not mandatory) signals for i.e atomic
 operations are only implemented as a parameter. This can be implemented as see fit.
 Both devices implement limited error handling (e.g bad writes).
-The byte enabled version uses word-aligned (RISC-V 4-word rsp) byte enable for write operations.
+The byte enabled version uses word-aligned (RISC-V 4-word rsp) byte enable for read and write operations.
 
 ## Adding an OBI Bus Slave Device
 
