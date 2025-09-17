@@ -35,6 +35,7 @@ Step-by-step:
 ```
 2. Adjust the address ranges of your peripherals. Without this
 all of your device signals will be routed to the obi error device, instead.
+
 3. Adjust the Obconfig. Signals/wires are enabled by per paremeter basis. For example, 
 you can choose not to use the rready signal. 
 ```
@@ -52,13 +53,22 @@ you can choose not to use the rready signal.
       };
 ```
 
-Optionally, you can create your own OBI struct. All that OBI mux/demux needs is a struct with matching signal names.
-4. Instantiate (2) OBI buses for your devices: 
+Optionally, you can create your own OBI struct. All that an OBI mux/demux needs is a struct with matching signal names.
+
+4. Instantiate two OBI buses for your devices: 
 one for the A-channel, and the other for the R-channel. 
 Tie off signals if desired.
 
 ```
-    // Error bus                                                        sbr_obi_req_t error_obi_req;                                        sbr_obi_rsp_t error_obi_rsp;                                                                                                            // Slave 1 bus                                                      sbr_obi_req_t foo_obi_req;                                          sbr_obi_rsp_t foo_obi_rsp;                                                                                                              // Slave 2 bus                                                      sbr_obi_req_t bar_obi_req;                                          sbr_obi_rsp_t bar_obi_rsp;
+    // Error bus
+sbr_obi_req_t error_obi_req;
+sbr_obi_rsp_t error_obi_rsp;
+// Slave 1 bus
+sbr_obi_req_t foo_obi_req;
+sbr_obi_rsp_t foo_obi_rsp;
+ // Slave 2 bus
+sbr_obi_req_t bar_obi_req;
+sbr_obi_rsp_t bar_obi_rsp;
 
 ```
 
