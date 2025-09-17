@@ -91,22 +91,24 @@ mem_waligned_32 #(
     .clk (clk_i), 
     .reset (reset_ni), 
     .we(mem_we),   // FSM-signal
-    .be(obi_be_i), // all 3 sampled on clk' 
+    .be(be_q), // all 3 sampled on clk' 
     .a (addr_q),   
     .wd(wdata_q),
     .rd(rdata_q),
     .err(obi_err_o) 
 ); 
 
-
-
 /// Chip-enable registers
+
+logic chip_en;
+
+assign chip_en = obi_req_i | obi_gnt_o;
 
 always_ff@(posedge clk_i or negedge reset_ni) begin
     if(!reset_ni) begin
         addr_q <= '0;
     end
-    else if(obi_req_i) begin
+    else if(chip_en) begin
         addr_q <= obi_addr_i; 
     end
 end
@@ -115,7 +117,7 @@ always_ff@(posedge clk_i or negedge reset_ni) begin
     if(!reset_ni) begin
         wdata_q <= '0;
     end
-    else if(obi_req_i) begin
+    else if(chip_en) begin
         wdata_q <= obi_wdata_i; 
     end
 end
@@ -125,7 +127,7 @@ always_ff@(posedge clk_i or negedge reset_ni) begin
     if(!reset_ni) begin
         be_q <= '0;
     end
-    else if(obi_req_i) begin
+    else if(chip_en) begin
         be_q <= obi_be_i; 
     end
 end
@@ -156,7 +158,7 @@ always_ff@(posedge clk_i or negedge reset_ni) begin
     end
 end
 
-always_comb begin
+always_comb begin : nextstate_comb
     obi_rdata_o = 0;
     mem_we = 'b0;
     case(state)

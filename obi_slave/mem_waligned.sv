@@ -51,14 +51,21 @@ always_ff@(posedge clk) begin : mem_write
     end
 end
 
-always_comb begin: mem_read 
+
+// 1) mask bits with an and gate on each byte (fastest)
+
+// 2) Explicit muxes (16:1) for byte reads
+
+// replace this with a mux
+always_comb begin : mem_read 
    rerr = 1'b0;
+   rd = 0;
    case(be)
-        4'b1111: rd = mem[a[7:2]]; // sw
-        // sh zone
+        4'b1111: rd = mem[a[7:2]]; // lw
+        // lh zone
         4'b1100: rd[31:16] = mem[a[7:2]][a[1]];
         4'b0011: rd[15:0] = mem[a[7:2]][a[0]];
-        // sb zone
+        // lb zone
         4'b1000: rd[31:24] = mem[a[7:2]][a[1]][a[1]];
         4'b0100: rd[23:16] = mem[a[7:2]][a[1]][a[0]];
         4'b0010: rd[15:8] = mem[a[7:2]][a[0]][a[1]];
