@@ -24,7 +24,9 @@ module mem_waligned_32#(
 
 logic werr, rerr;
 
-//// Memory array declaration
+///// Memory array declaration
+/// Credit where its due:
+// https://stackoverflow.com/questions/58305689/
 
 //    [shw][sby][dat]    [   word_count   ]
 logic [1:0][1:0][7:0] mem[2**MEM_WIDTH-1:0];
