@@ -64,7 +64,7 @@ always_comb begin : mem_read
         4'b1111: rd = mem[a[7:2]]; // lw
         // lh zone
         4'b1100: rd[31:16] = mem[a[7:2]][a[1]];
-        4'b0011: rd[15:0] = mem[a[7:2]][a[0]];
+        4'b0011: rd[15:0] = mem[a[7:2]][a[1]];
         // lb zone
         4'b1000: rd[31:24] = mem[a[7:2]][a[1]][a[0]];
         4'b0100: rd[23:16] = mem[a[7:2]][a[1]][a[0]];
