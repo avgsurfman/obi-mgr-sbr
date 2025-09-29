@@ -158,7 +158,18 @@ See the Greyhound project for reference.
 
 
 ## State-transition Diagram
+
+### Master FSM
+Circular transitions have been skipped for this one for readability.
+
 ![A state transition diagram drawn by GraphViz.](fsm.svg)
+
+
+### Slave FSM
+![A state transition diagram drawn by GraphViz.](fsm-slave.svg)
+
+
+## License
 
 Licensed under Apache 2.0 license, see details in `License.txt`.
 
