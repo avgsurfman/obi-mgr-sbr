@@ -96,6 +96,7 @@ module main import soc_pkg::*;
     assign bar_obi_req = all_periph_obi_req[PeriphBar];
     assign all_periph_obi_rsp[PeriphBar] = bar_obi_rsp;
 
+    
 
     //// Master device
     obi_master #(

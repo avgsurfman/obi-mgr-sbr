@@ -1,10 +1,40 @@
-# Obi Master-Slave Implementation
+# Obi Master-Slave Implementation Tutorial
+
 OBI BUS protocol Master and Slave sample implementation according to
 OBI protocol, version 1.2.
 
 *100% ORGANIC CODE | NOW 100% AI-FREE!*
 
+## What's this?
+
+This is a sample OBI bus implementation according to the OBI 1.2v standard.
+The purpose of this repository is to provide quick reference on how to add a
+peripheral device to the OBI bus, as well as integrate them into your design.
+
 Contents:
+
+```
+├── LICENSE
+├── README.md
+├── ip                    // IP
+...
+├── main.sv
+├── main_tb.sv
+├── obi_master
+│   ├── obi_master.sv     // Master DUT
+│   └── obi_master_tb.sv  // TB
+└── obi_slave
+    ├── a.out
+    ├── config.json
+    ├── mem.hex
+    ├── mem_waligned.sv   // Byte-aligned memory
+    ├── obi_slave.sv      // Slave DUT
+    ├── obi_slave_be.sv
+    ├── obi_slave_be_tb.sv
+    └── obi_slave_tb.sv
+
+```
+Short description: 
 - `obi_master.sv` - Master device able to send Read/Write commands.
 - `obi_slave.sv` - Slave device able to write and read signals from its SRAM.
 - `obi_slave_be.sv` - Slave with byte-enable word-aligned memory (risc-v).
@@ -111,15 +141,24 @@ Remember to add appropriate entries for the adress map in main.sv as well.
 if your synthesis tool supports that.
 
 ## Adding a (second) Master device
-??? TODO
-- Instantiate the Multiplexer
-- Change the master device macro
-- see the Greyhound project for proper reference
+
+1. Instantiate the Multiplexer
+If your design features multiple masters, you must add a mux to each slave and a demux
+for each master. Depending on your usecase, you might want to 
+use an OBI Xbar instead, if you have multiple slaves and masters in your design.
+
+![OBI-XBAR](obi_xbar.jpg)
+
+
+2. Change the master device macro
+You must also change the configuration in the `soc_pkg` file
+to match the number of your peripherals/master devices. 
+
+See the Greyhound project for reference.
 
 
 ## State-transition Diagram
-![A state transition diagram poorly drawn by hand and digitized. Honestly, just use a screen reader for those files instead.](transition_graph.jpg)
-
+![A state transition diagram drawn by GraphViz.](fsm.svg)
 
 Licensed under Apache 2.0 license, see details in `License.txt`.
 

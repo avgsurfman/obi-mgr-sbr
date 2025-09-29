@@ -1,5 +1,5 @@
 // mem_waligned_32
-// Generic RISC-V data/instruction memory.
+// Generic RISC-V 32-bit data/instruction memory.
 // Set byteenable (obi_be_i) to load/store half-words or single bytes.
 // CC Franciszek Moszczuk and IHP Microelectronics GmbH.
 // Licensed under Apache 2.0 License.
@@ -33,7 +33,9 @@ logic [1:0][1:0][7:0] mem[2**MEM_WIDTH-1:0];
 
 always_ff@(posedge clk) begin : mem_write
     // Unfortunately implicit bit truncation will crash your simulation,
-    // hence the 7 magic constant. Beware.
+    // hence the 7 magic constant. 
+    // Also, multi-dimensional selects like mem[a[7:2]][[a[1]][a[0]] 
+    // crash librelane on the DRC check. Noone knows why.
     werr = 1'b0;
     if(we) begin 
         case(be)
@@ -53,12 +55,6 @@ always_ff@(posedge clk) begin : mem_write
     end
 end
 
-
-// 1) mask bits with an and gate on each byte (fastest)
-
-// 2) Explicit muxes (16:1) for byte reads
-
-// replace this with a mux
 always_comb begin : mem_read 
    rerr = 1'b0;
    rd = 0;
